@@ -17,11 +17,17 @@ repositories {
 }
 
 dependencies {
-    // This dependency is exported to consumers, that is to say found on their compile classpath.
-    api libs.commons.math3
+    implementation group: 'org.slf4j', name: 'slf4j-api', version: project.dep_slf4j
+    testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: project.dep_slf4j
 
-    // This dependency is used internally, and not exposed to consumers on their own compile classpath.
-    implementation libs.guava
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.5'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.18.2'
+
+    // lombok
+    compileOnly 'org.projectlombok:lombok:' + project.dep_lombok
+    annotationProcessor 'org.projectlombok:lombok:' + project.dep_lombok
+    testCompileOnly 'org.projectlombok:lombok:' + project.dep_lombok
+    testAnnotationProcessor 'org.projectlombok:lombok:' + project.dep_lombok
 }
 
 testing {
