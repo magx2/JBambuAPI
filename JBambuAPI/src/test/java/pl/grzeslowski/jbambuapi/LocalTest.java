@@ -39,9 +39,13 @@ class LocalTest {
         printerClient.connect();
         printerClient.subscribe((topic, data) ->
                 log.info(topic + ": " + new String(data, UTF_8)));
+
+        var printerWatcher = new PrinterWatcher();
+        printerClient.subscribe(printerWatcher);
+        printerWatcher.subscribe((__, fullState) -> log.info("Full State: " + fullState));
+
         var channel = printerClient.getChannel();
         channel.sendCommand(defaultPushingCommand());
-        channel.sendCommand(LedControl.off(WORK_LIGHT));
 
         Thread.sleep(5000);
 
