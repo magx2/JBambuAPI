@@ -1,6 +1,7 @@
 package pl.grzeslowski.jbambuapi;
 
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import pl.grzeslowski.jbambuapi.PrinterClient.Channel.LedControl;
@@ -21,6 +22,7 @@ import static pl.grzeslowski.jbambuapi.PrinterClientConfig.SCHEME;
 class LocalTest {
     @Test
     @DisplayName("should ")
+    @Disabled
     void x() throws NoSuchAlgorithmException, KeyManagementException, InterruptedException, URISyntaxException {
         // given
         var host = requireNonNull(System.getenv("HOST"), "Please pass HOST");
