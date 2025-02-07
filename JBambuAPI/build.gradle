@@ -46,3 +46,33 @@ java {
         languageVersion = JavaLanguageVersion.of(21)
     }
 }
+
+tasks.register('cleanMqtt', Delete) {
+    // Adjust this if JBambuAPI is a subproject or located elsewhere
+    def jbambuApiBuildDir = rootProject.projectDir.toPath().resolve("JBambuAPI").toFile()
+
+    def pattern = ~/([a-f0-9\-]+-ssl.+$)/
+
+    if (!jbambuApiBuildDir.exists()) {
+        logger.lifecycle("JBambuAPI build directory does not exist: ${jbambuApiBuildDir.absolutePath}")
+        return
+    }
+
+    def matchingDirs = jbambuApiBuildDir.listFiles()?.findAll { file ->
+        file.isDirectory() && file.name =~ pattern
+    } ?: []
+
+    if (matchingDirs.isEmpty()) {
+        logger.lifecycle("No matching MQTT directories found in ${jbambuApiBuildDir}.")
+    } else {
+        matchingDirs.each { dir ->
+            logger.lifecycle("Deleting MQTT directory: ${dir.absolutePath}")
+            delete dir
+        }
+    }
+}
+
+tasks.named('clean').configure {
+    dependsOn tasks.named('cleanMqtt')
+}
+
