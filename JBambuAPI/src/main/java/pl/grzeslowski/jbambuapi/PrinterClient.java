@@ -1,5 +1,6 @@
 package pl.grzeslowski.jbambuapi;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
@@ -20,10 +21,7 @@ import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.stream;
@@ -41,12 +39,9 @@ public final class PrinterClient implements AutoCloseable {
     private final Logger log;
     private final PrinterClientConfig config;
     private final MqttClient mqtt;
-    private final List<PrinterStateConsumer> subscribers = synchronizedList(new ArrayList<>());
+    private final List<ChannelMessageConsumer> subscribers = synchronizedList(new ArrayList<>());
     @Getter
     private final Channel channel = new Channel();
-
-    private final ReadWriteLock fullStateLock = new ReentrantReadWriteLock();
-    private PrinterState fullState = null;
 
     public PrinterClient(PrinterClientConfig config) throws CommunicationException {
         log = LoggerFactory.getLogger(getClass() + "." + config.serial());
@@ -59,7 +54,6 @@ public final class PrinterClient implements AutoCloseable {
         } catch (MqttException e) {
             throw fromMqttException("Cannot create MQTT at %s! ".formatted(uri) + e.getLocalizedMessage(), e);
         }
-        jsonMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public void connect() throws CommunicationException, NoSuchAlgorithmException, KeyManagementException {
@@ -79,18 +73,14 @@ public final class PrinterClient implements AutoCloseable {
                 if (log.isDebugEnabled()) {
                     log.debug("Message received: {}", new String(payload, UTF_8));
                 }
-                var delta = jsonMapper.readValue(payload, PrinterState.class);
-                fullStateLock.writeLock().lock();
-                try {
-                    fullState = PrinterState.merge(fullState, delta);
-                } finally {
-                    fullStateLock.writeLock().unlock();
-                }
                 subscribers.forEach(subscriber -> {
                     try {
-                        subscriber.consumer(delta, fullState);
+                        subscriber.consumer(topic, payload);
                     } catch (Exception e) {
-                        log.warn("Consumer [{}] could not accept message: {}", subscriber, delta, e);
+                        if (log.isWarnEnabled()) {
+                            log.warn("Consumer {} could not accept message: {}",
+                                    subscriber, new String(payload, UTF_8), e);
+                        }
                     }
                 });
             });
@@ -129,31 +119,14 @@ public final class PrinterClient implements AutoCloseable {
         return options;
     }
 
-    /**
-     * Forces printer to send (full) current state. Use with caution because it can lag the printer.
-     *
-     * @throws CommunicationException error during publishing to MQTT topic
-     */
-    public void update() throws CommunicationException {
-        var topic = "device/%s/report".formatted(config.serial());
-        try {
-            var message = new MqttMessage("{\"pushing\": {\"command\": \"pushall\"}}".getBytes(UTF_8));
-            message.setId(messageId.getAndIncrement());
-            message.setQos(0);
-            mqtt.publish(topic, message);
-        } catch (MqttException e) {
-            throw fromMqttException("Cannot request for reports! " + e.getLocalizedMessage(), e);
-        }
-    }
-
-    public void subscribe(PrinterStateConsumer subscriber) {
+    public void subscribe(ChannelMessageConsumer subscriber) {
         subscribers.add(subscriber);
     }
 
-    public boolean unsubscribe(PrinterStateConsumer subscriber) {
+    public boolean unsubscribe(ChannelMessageConsumer subscriber) {
         var remove = subscribers.remove(subscriber);
         if (!remove) {
-            log.warn("Subscriber [{}] was not removed! " +
+            log.warn("Subscriber {} was not removed! " +
                     "It either was not in the list or equals is not implemented correctly.", subscriber);
         }
         return remove;
@@ -163,19 +136,9 @@ public final class PrinterClient implements AutoCloseable {
         return mqtt.isConnected();
     }
 
-    public Optional<PrinterState> getFullState() {
-        fullStateLock.readLock().lock();
-        try {
-            return ofNullable(fullState);
-        } finally {
-            fullStateLock.readLock().unlock();
-        }
-    }
-
     @Override
     public void close() {
         subscribers.clear();
-        fullState = null;
         try {
             log.debug("Closing MQTT {}", config.uri());
             mqtt.disconnect();
@@ -211,10 +174,12 @@ public final class PrinterClient implements AutoCloseable {
             try {
                 var json = jsonMapper.writeValueAsBytes(message.payload);
                 if (log.isDebugEnabled()) {
-                    log.debug("Sending command [{}] to topic [{}] with json [{}]", command, topic, new String(json, UTF_8));
+                    log.debug("Sending command {} to topic {} with json {}", command, topic, new String(json, UTF_8));
                 }
                 var mqttMessage = new MqttMessage(json);
                 mqttMessage.setId(id);
+                // set QoS to 0 because in LAN mode the publish method was hanging for eternity
+                mqttMessage.setQos(0);
                 try {
                     mqtt.publish(topic, mqttMessage);
                 } catch (MqttException e) {
@@ -400,6 +365,7 @@ public final class PrinterClient implements AutoCloseable {
             )));
         }
 
+        @JsonInclude(JsonInclude.Include.NON_NULL)
         private static record Message(String topic, Payload payload) {
             private static record Payload(
                     Map<String, Object> info,
@@ -498,6 +464,9 @@ public final class PrinterClient implements AutoCloseable {
          * <a href="https://github.com/Doridian/OpenBambuAPI/blob/main/mqtt.md#pushingpushall">"pushingpushall" API Doc</a>
          */
         public static record PushingCommand(int version, int pushTarget) implements Command {
+            public static PushingCommand defaultPushingCommand() {
+                return new PushingCommand(1, 1);
+            }
         }
 
         public static enum PrintCommand implements Command {

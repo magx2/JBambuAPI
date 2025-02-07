@@ -4,9 +4,6 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.UUID;
 
-import static org.eclipse.paho.client.mqttv3.MqttConnectOptions.CONNECTION_TIMEOUT_DEFAULT;
-import static org.eclipse.paho.client.mqttv3.MqttConnectOptions.KEEP_ALIVE_INTERVAL_DEFAULT;
-
 public record PrinterClientConfig(
         URI uri,
         String clientId,
@@ -17,18 +14,35 @@ public record PrinterClientConfig(
         int keepAliveInterval,
         boolean automaticReconnect) implements AutoCloseable {
     public static final int DEFAULT_PORT = 8883;
-    public static final String DEFAULT_USERNAME = "bblp";
+    public static final String LOCAL_USERNAME = "bblp";
+    public static final String SCHEME = "ssl://";
+    public static final int DEFAULT_CONNECTION_TIMEOUT = org.eclipse.paho.client.mqttv3.MqttConnectOptions.CONNECTION_TIMEOUT_DEFAULT;
+    public static final int DEFAULT_KEEP_ALIVE_INTERVAL = org.eclipse.paho.client.mqttv3.MqttConnectOptions.KEEP_ALIVE_INTERVAL_DEFAULT;
+    public static final boolean DEFAULT_AUTOMATIC_RECONNECT = false;
 
-    public static PrinterClientConfig buildDefault(String ip, String serial, char[] accessCode) {
+    public static PrinterClientConfig requiredFields(URI host, String username, String serial, char[] accessCode) {
         return new PrinterClientConfig(
-                URI.create("ssl://" + ip + ":" + DEFAULT_PORT),
+                host,
                 UUID.randomUUID().toString(),
-                DEFAULT_USERNAME,
+                username,
                 serial,
                 accessCode,
-                CONNECTION_TIMEOUT_DEFAULT,
-                KEEP_ALIVE_INTERVAL_DEFAULT,
-                false);
+                DEFAULT_CONNECTION_TIMEOUT,
+                DEFAULT_KEEP_ALIVE_INTERVAL,
+                DEFAULT_AUTOMATIC_RECONNECT);
+    }
+
+
+    public static PrinterClientConfig buildDefault(String host, String serial, char[] accessCode) {
+        return new PrinterClientConfig(
+                URI.create(SCHEME + host + ":" + DEFAULT_PORT),
+                UUID.randomUUID().toString(),
+                LOCAL_USERNAME,
+                serial,
+                accessCode,
+                DEFAULT_CONNECTION_TIMEOUT,
+                DEFAULT_KEEP_ALIVE_INTERVAL,
+                DEFAULT_AUTOMATIC_RECONNECT);
     }
 
     @Override
