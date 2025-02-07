@@ -1,5 +1,6 @@
 package pl.grzeslowski.jbambuapi;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.io.Serial;
@@ -27,5 +28,9 @@ public class CommunicationException extends RuntimeException{
 
     public static CommunicationException fromMqttException(String cause, MqttException mqttException) {
         return new CommunicationException(cause, mqttException);
+    }
+
+    public static CommunicationException fromJsonException(String cause, JsonProcessingException exception) {
+        return new CommunicationException(cause, exception);
     }
 }
