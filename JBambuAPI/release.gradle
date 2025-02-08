@@ -1,0 +1,10 @@
+group = 'pl.grzeslowski'
+version = project.maven_version
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+        }
+    }
+}
