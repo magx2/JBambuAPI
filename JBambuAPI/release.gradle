@@ -1,6 +1,11 @@
 group = 'pl.grzeslowski'
 version = project.maven_version
 
+java {
+    withJavadocJar()  // Generate Javadoc JAR
+    withSourcesJar()   // Include source JAR
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
