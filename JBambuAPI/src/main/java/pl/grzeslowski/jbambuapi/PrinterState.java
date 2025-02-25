@@ -6,12 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public record PrinterState(PrintDetails print) {
+public record PrinterState(PrintDetails printDetails) {
 
     public static PrinterState merge(PrinterState previous, PrinterState next) {
         if(previous == null) return next;
         if(next == null) return previous;
-        return new PrinterState(PrintDetails.merge(previous.print, next.print));
+        return new PrinterState(PrintDetails.merge(previous.printDetails, next.printDetails));
     }
 
     public record PrintDetails(

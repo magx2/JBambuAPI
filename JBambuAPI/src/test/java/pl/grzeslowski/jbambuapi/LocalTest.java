@@ -4,7 +4,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import pl.grzeslowski.jbambuapi.PrinterClient.Channel.LedControl;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -13,7 +12,6 @@ import java.security.NoSuchAlgorithmException;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
-import static pl.grzeslowski.jbambuapi.PrinterClient.Channel.LedControl.LedNode.WORK_LIGHT;
 import static pl.grzeslowski.jbambuapi.PrinterClient.Channel.PushingCommand.defaultPushingCommand;
 import static pl.grzeslowski.jbambuapi.PrinterClientConfig.DEFAULT_PORT;
 import static pl.grzeslowski.jbambuapi.PrinterClientConfig.SCHEME;

@@ -31,7 +31,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static pl.grzeslowski.jbambuapi.CommunicationException.fromJsonException;
 import static pl.grzeslowski.jbambuapi.CommunicationException.fromMqttException;
-import static pl.grzeslowski.jbambuapi.PrinterClient.Channel.LedControl.LedMode.*;
+import static pl.grzeslowski.jbambuapi.PrinterClient.Channel.LedControlCommand.LedMode.*;
 
 public final class PrinterClient implements AutoCloseable {
     private final AtomicInteger messageId = new AtomicInteger(1);
@@ -157,16 +157,16 @@ public final class PrinterClient implements AutoCloseable {
                 case AmsFilamentSettingCommand amsFilamentSettingCommand -> buildMessage(amsFilamentSettingCommand);
                 case AmsUserSettingCommand amsUserSettingCommand -> buildMessage(amsUserSettingCommand);
                 case ChangeFilamentCommand changeFilamentCommand -> buildMessage(changeFilamentCommand);
-                case GCodeFile gCodeFile -> buildMessage(gCodeFile);
-                case GCodeLine gCodeLine -> buildMessage(gCodeLine);
-                case IpCamRecord ipCamRecord -> buildMessage(ipCamRecord);
-                case IpCamTimelaps ipCamTimelaps -> buildMessage(ipCamTimelaps);
-                case LedControl ledControl -> buildMessage(ledControl);
+                case GCodeFileCommand gCodeFile -> buildMessage(gCodeFile);
+                case GCodeLineCommand gCodeLine -> buildMessage(gCodeLine);
+                case IpCamRecordCommand ipCamRecord -> buildMessage(ipCamRecord);
+                case IpCamTimelapsCommand ipCamTimelaps -> buildMessage(ipCamTimelaps);
+                case LedControlCommand ledControl -> buildMessage(ledControl);
                 case PrintCommand printCommand -> buildMessage(printCommand);
                 case PrintSpeedCommand printSpeedCommand -> buildMessage(printSpeedCommand);
                 case PushingCommand pushingCommand -> buildMessage(pushingCommand);
                 case SystemCommand systemCommand -> buildMessage(systemCommand);
-                case XCamControl xCamControl -> buildMessage(xCamControl);
+                case XCamControlCommand xCamControl -> buildMessage(xCamControl);
             };
             message = addSequenceId(message, id);
             var topic = "device/%s/%s".formatted(config.serial(), message.topic);
@@ -292,13 +292,13 @@ public final class PrinterClient implements AutoCloseable {
                     "param", printSpeedCommand.level)));
         }
 
-        private Message buildMessage(GCodeFile gCodeFile) {
+        private Message buildMessage(GCodeFileCommand gCodeFileCommand) {
             return Message.request(Message.Payload.print(Map.of(
                     "command", "gcode_file",
-                    "param", gCodeFile.filename)));
+                    "param", gCodeFileCommand.filename)));
         }
 
-        private Message buildMessage(GCodeLine gCodeLine) {
+        private Message buildMessage(GCodeLineCommand gCodeLine) {
             var gCode = join("\n", gCodeLine.lines);
             return Message.request(Message.Payload.print(Map.of(
                     "command", "gcode_file",
@@ -306,12 +306,12 @@ public final class PrinterClient implements AutoCloseable {
                     "user_id", gCodeLine.userId)));
         }
 
-        private Message buildMessage(LedControl ledControl) {
-            var ledNode = switch (ledControl.ledNode) {
+        private Message buildMessage(LedControlCommand ledControlCommand) {
+            var ledNode = switch (ledControlCommand.ledNode) {
                 case CHAMBER_LIGHT -> "chamber_light";
                 case WORK_LIGHT -> "work_light";
             };
-            var ledMode = switch (ledControl.ledMode) {
+            var ledMode = switch (ledControlCommand.ledMode) {
                 case ON -> "on";
                 case OFF -> "off";
                 case FLASHING -> "flashing";
@@ -322,10 +322,10 @@ public final class PrinterClient implements AutoCloseable {
                     "led_mode", ledMode,
 
                     // only for flashing
-                    "led_on_time", ofNullable(ledControl.ledOnTime).orElse(0),
-                    "led_off_time", ofNullable(ledControl.ledOffTime).orElse(0),
-                    "loop_times", ofNullable(ledControl.loopTimes).orElse(0),
-                    "interval_time", ofNullable(ledControl.intervalTime).orElse(0)
+                    "led_on_time", ofNullable(ledControlCommand.ledOnTime).orElse(0),
+                    "led_off_time", ofNullable(ledControlCommand.ledOffTime).orElse(0),
+                    "loop_times", ofNullable(ledControlCommand.loopTimes).orElse(0),
+                    "interval_time", ofNullable(ledControlCommand.intervalTime).orElse(0)
             )));
         }
 
@@ -338,30 +338,30 @@ public final class PrinterClient implements AutoCloseable {
             )));
         }
 
-        private Message buildMessage(IpCamRecord ipCamRecord) {
+        private Message buildMessage(IpCamRecordCommand ipCamRecordCommand) {
             return Message.request(Message.Payload.camera(Map.of(
                     "command", "ipcam_record_set",
-                    "control", ipCamRecord.enable ? "enable" : "disable"
+                    "control", ipCamRecordCommand.enable ? "enable" : "disable"
             )));
         }
 
-        private Message buildMessage(IpCamTimelaps ipCamTimelaps) {
+        private Message buildMessage(IpCamTimelapsCommand ipCamTimelapsCommand) {
             return Message.request(Message.Payload.camera(Map.of(
                     "command", "ipcam_timelapse",
-                    "control", ipCamTimelaps.enable ? "enable" : "disable"
+                    "control", ipCamTimelapsCommand.enable ? "enable" : "disable"
             )));
         }
 
-        private Message buildMessage(XCamControl xCamControl) {
-            var module = switch (xCamControl.module) {
+        private Message buildMessage(XCamControlCommand xCamControlCommand) {
+            var module = switch (xCamControlCommand.module) {
                 case FIRST_LAYER_INSPECTOR -> "first_layer_inspector";
                 case SPAGHETTI_DETECTOR -> "spaghetti_detector";
             };
             return Message.request(Message.Payload.xcam(Map.of(
                     "command", "xcam_control_set",
                     "module_name", module,
-                    "control", xCamControl.control,
-                    "print_halt", xCamControl.printHalt
+                    "control", xCamControlCommand.control,
+                    "print_halt", xCamControlCommand.printHalt
             )));
         }
 
@@ -583,7 +583,7 @@ public final class PrinterClient implements AutoCloseable {
          *
          * @param filename Filename (on the printer's filesystem) to print
          */
-        public static record GCodeFile(String filename) implements Command {
+        public static record GCodeFileCommand(String filename) implements Command {
         }
 
         /**
@@ -594,7 +594,7 @@ public final class PrinterClient implements AutoCloseable {
          * @param lines  Gcode to execute
          * @param userId userId (optional)
          */
-        public static record GCodeLine(List<String> lines, String userId) implements Command {
+        public static record GCodeLineCommand(List<String> lines, String userId) implements Command {
         }
 
         /**
@@ -609,19 +609,19 @@ public final class PrinterClient implements AutoCloseable {
          * @param loopTimes    The below effect is only used for "flashing" mode - How many times to loop
          * @param intervalTime The below effect is only used for "flashing" mode - Looping interval
          */
-        public static record LedControl(LedNode ledNode, LedMode ledMode, Integer ledOnTime, Integer ledOffTime,
-                                        Integer loopTimes,
-                                        Integer intervalTime) implements Command {
-            public static LedControl on(LedNode ledNode) {
-                return new LedControl(ledNode, ON, null, null, null, null);
+        public static record LedControlCommand(LedNode ledNode, LedMode ledMode, Integer ledOnTime, Integer ledOffTime,
+                                               Integer loopTimes,
+                                               Integer intervalTime) implements Command {
+            public static LedControlCommand on(LedNode ledNode) {
+                return new LedControlCommand(ledNode, ON, null, null, null, null);
             }
 
-            public static LedControl off(LedNode ledNode) {
-                return new LedControl(ledNode, OFF, null, null, null, null);
+            public static LedControlCommand off(LedNode ledNode) {
+                return new LedControlCommand(ledNode, OFF, null, null, null, null);
             }
 
-            public static LedControl flashing(LedNode ledNode, int ledOnTime, int ledOffTime, int loopTimes, int intervalTime) {
-                return new LedControl(ledNode, FLASHING, ledOnTime, ledOffTime, loopTimes, intervalTime);
+            public static LedControlCommand flashing(LedNode ledNode, int ledOnTime, int ledOffTime, int loopTimes, int intervalTime) {
+                return new LedControlCommand(ledNode, FLASHING, ledOnTime, ledOffTime, loopTimes, intervalTime);
             }
 
             public static enum LedNode {
@@ -649,7 +649,7 @@ public final class PrinterClient implements AutoCloseable {
          *
          * @param enable enable or disable camera record set
          */
-        public static record IpCamRecord(boolean enable) implements Command {
+        public static record IpCamRecordCommand(boolean enable) implements Command {
         }
 
         /**
@@ -659,7 +659,7 @@ public final class PrinterClient implements AutoCloseable {
          *
          * @param enable enable or disable camera timelaps
          */
-        public static record IpCamTimelaps(boolean enable) implements Command {
+        public static record IpCamTimelapsCommand(boolean enable) implements Command {
         }
 
         /**
@@ -671,7 +671,7 @@ public final class PrinterClient implements AutoCloseable {
          * @param control   Enable the module
          * @param printHalt Cause the module to halt the print on error
          */
-        public static record XCamControl(Module module, boolean control, boolean printHalt) implements Command {
+        public static record XCamControlCommand(Module module, boolean control, boolean printHalt) implements Command {
             public static enum Module {
                 FIRST_LAYER_INSPECTOR, SPAGHETTI_DETECTOR
             }
