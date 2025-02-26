@@ -85,7 +85,7 @@ public final class PrinterClient implements AutoCloseable {
                 });
             });
         } catch (MqttException e) {
-            throw fromMqttException("Cannot subscribe to MQTT at %s! ".formatted(config.uri()), e);
+            throw fromMqttException("Cannot subscribe to MQTT at %s!".formatted(config.uri()), e);
         }
     }
 
