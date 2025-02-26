@@ -20,17 +20,17 @@ public record PrinterState(PrintDetails printDetails) {
             @JsonProperty("xcam") XCam xCam,
             @JsonProperty("upload") Upload upload,
             @JsonProperty("net") Net net,
-            @JsonProperty("nozzle_temper") double nozzleTemperature,
-            @JsonProperty("nozzle_target_temper") double nozzleTargetTemperature,
-            @JsonProperty("bed_temper") double bedTemperature,
-            @JsonProperty("bed_target_temper") double bedTargetTemperature,
-            @JsonProperty("chamber_temper") int chamberTemperature,
+            @JsonProperty("nozzle_temper") Double nozzleTemperature,
+            @JsonProperty("nozzle_target_temper") Double nozzleTargetTemperature,
+            @JsonProperty("bed_temper") Double bedTemperature,
+            @JsonProperty("bed_target_temper") Double bedTargetTemperature,
+            @JsonProperty("chamber_temper") Double chamberTemperature,
             @JsonProperty("mc_print_stage") String mcPrintStage,
-            @JsonProperty("mc_percent") int mcPercent,
-            @JsonProperty("mc_remaining_time") int mcRemainingTime,
+            @JsonProperty("mc_percent") Integer mcPercent,
+            @JsonProperty("mc_remaining_time") Integer mcRemainingTime,
             @JsonProperty("wifi_signal") String wifiSignal,
             @JsonProperty("command") String command,
-            @JsonProperty("msg") int message,
+            @JsonProperty("msg") Integer message,
             @JsonProperty("sequence_id") String sequenceId
     ) {
         public static PrintDetails merge(PrintDetails previous, PrintDetails next) {
@@ -59,7 +59,7 @@ public record PrinterState(PrintDetails printDetails) {
     }
 
     public record UpgradeState(
-            @JsonProperty("sequence_id") int sequenceId,
+            @JsonProperty("sequence_id") Integer sequenceId,
             @JsonProperty("status") String status,
             @JsonProperty("message") String message
     ) {
@@ -80,7 +80,7 @@ public record PrinterState(PrintDetails printDetails) {
             @JsonProperty("timelapse") String timelapse,
             @JsonProperty("resolution") String resolution,
             @JsonProperty("tutk_server") String tutkServer,
-            @JsonProperty("mode_bits") int modeBits
+            @JsonProperty("mode_bits") Integer modeBits
     ) {
         public static IpCam merge(IpCam previous, IpCam next) {
             if(previous == null) return next;
@@ -108,7 +108,7 @@ public record PrinterState(PrintDetails printDetails) {
 
     public record Upload(
             @JsonProperty("status") String status,
-            @JsonProperty("progress") int progress,
+            @JsonProperty("progress") Integer progress,
             @JsonProperty("message") String message
     ) {
         public static Upload merge(Upload previous, Upload next) {
@@ -123,7 +123,7 @@ public record PrinterState(PrintDetails printDetails) {
     }
 
     public record Net(
-            @JsonProperty("conf") int conf,
+            @JsonProperty("conf") Integer conf,
             @JsonProperty("info") List<Map<String, Object>> info
     ) {
         public static Net merge(Net previous, Net next) {
