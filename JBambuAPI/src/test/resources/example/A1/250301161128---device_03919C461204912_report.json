@@ -1,0 +1,20 @@
+{
+  "print": {
+    "nozzle_temper": 219.8125,
+    "bed_target_temper": 0,
+    "cooling_fan_speed": "3",
+    "big_fan1_speed": "3",
+    "big_fan2_speed": "3",
+    "mc_percent": 98,
+    "ams_status": 258,
+    "wifi_signal": "-64dBm",
+    "mc_print_sub_stage": 4,
+    "fan_gear": 40,
+    "ams": {
+      "tray_tar": "255"
+    },
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "9699"
+  }
+}

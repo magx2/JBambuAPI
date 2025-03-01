@@ -1,0 +1,17 @@
+{
+  "print": {
+    "nozzle_temper": 221.4375,
+    "nozzle_target_temper": 0,
+    "bed_temper": 64.5625,
+    "wifi_signal": "-64dBm",
+    "mc_print_sub_stage": 0,
+    "ams": {
+      "tray_now": "255",
+      "tray_pre": "255",
+      "version": 17
+    },
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "9707"
+  }
+}

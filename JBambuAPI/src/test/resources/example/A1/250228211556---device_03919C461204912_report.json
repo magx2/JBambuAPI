@@ -1,0 +1,14 @@
+{
+  "print": {
+    "nozzle_temper": 220.40625,
+    "cooling_fan_speed": "9",
+    "big_fan1_speed": "9",
+    "big_fan2_speed": "9",
+    "mc_percent": 84,
+    "mc_remaining_time": 5,
+    "wifi_signal": "-53dBm",
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "1270"
+  }
+}

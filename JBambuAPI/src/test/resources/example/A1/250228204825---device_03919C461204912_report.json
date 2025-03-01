@@ -1,0 +1,13 @@
+{
+  "print": {
+    "nozzle_temper": 171.71875,
+    "bed_temper": 64.125,
+    "heatbreak_fan_speed": "9",
+    "cooling_fan_speed": "14",
+    "big_fan1_speed": "14",
+    "big_fan2_speed": "14",
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "576"
+  }
+}

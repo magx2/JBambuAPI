@@ -1,0 +1,13 @@
+{
+  "print": {
+    "cooling_fan_speed": "11",
+    "big_fan1_speed": "11",
+    "big_fan2_speed": "11",
+    "mc_remaining_time": 23,
+    "wifi_signal": "-58dBm",
+    "fan_gear": 201,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "852"
+  }
+}

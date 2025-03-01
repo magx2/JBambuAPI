@@ -1,0 +1,11 @@
+{
+  "print": {
+    "nozzle_temper": 219.8125,
+    "bed_temper": 65.03125,
+    "mc_remaining_time": 43,
+    "layer_num": 222,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "8710"
+  }
+}

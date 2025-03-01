@@ -1,0 +1,11 @@
+{
+  "print": {
+    "nozzle_temper": 248.6875,
+    "bed_temper": 64.46875,
+    "heatbreak_fan_speed": "12",
+    "wifi_signal": "-54dBm",
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "488"
+  }
+}

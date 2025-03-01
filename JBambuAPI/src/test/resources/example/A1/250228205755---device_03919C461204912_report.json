@@ -1,0 +1,9 @@
+{
+  "print": {
+    "layer_num": 8,
+    "fan_gear": 163,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "851"
+  }
+}

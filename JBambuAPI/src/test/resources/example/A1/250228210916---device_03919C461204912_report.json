@@ -1,0 +1,10 @@
+{
+  "print": {
+    "mc_percent": 66,
+    "wifi_signal": "-53dBm",
+    "layer_num": 31,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "1082"
+  }
+}

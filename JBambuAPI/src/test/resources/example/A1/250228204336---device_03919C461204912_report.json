@@ -1,0 +1,12 @@
+{
+  "print": {
+    "bed_temper": 23.90625,
+    "gcode_state": "PREPARE",
+    "subtask_name": "Single_Digit_Counter",
+    "gcode_file": "Single_Digit_Counter.gcode.3mf",
+    "print_type": "local",
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "435"
+  }
+}

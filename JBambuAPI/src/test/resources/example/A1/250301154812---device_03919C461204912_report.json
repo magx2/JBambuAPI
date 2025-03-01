@@ -1,0 +1,9 @@
+{
+  "print": {
+    "mc_remaining_time": 30,
+    "wifi_signal": "-58dBm",
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "9023"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "print": {
+    "nozzle_temper": 219.875,
+    "wifi_signal": "-60dBm",
+    "layer_num": 261,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "8900"
+  }
+}

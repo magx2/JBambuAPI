@@ -1,0 +1,26 @@
+{
+  "print": {
+    "bed_temper": 23.875,
+    "mc_print_stage": "2",
+    "mc_remaining_time": 37,
+    "ams_rfid_status": 3,
+    "wifi_signal": "-56dBm",
+    "gcode_state": "RUNNING",
+    "stg": [
+      2,
+      13,
+      24,
+      4,
+      8,
+      3,
+      14,
+      1
+    ],
+    "stg_cur": 255,
+    "total_layer_num": 57,
+    "k": "0.0200",
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "437"
+  }
+}

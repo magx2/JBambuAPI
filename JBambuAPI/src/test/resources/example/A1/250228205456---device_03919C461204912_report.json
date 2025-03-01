@@ -1,0 +1,15 @@
+{
+  "print": {
+    "nozzle_temper": 220.78125,
+    "bed_temper": 65.0625,
+    "ams_status": 261,
+    "wifi_signal": "-58dBm",
+    "ams": {
+      "tray_now": "255",
+      "version": 4
+    },
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "765"
+  }
+}

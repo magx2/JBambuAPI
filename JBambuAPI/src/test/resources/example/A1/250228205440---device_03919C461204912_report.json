@@ -1,0 +1,11 @@
+{
+  "print": {
+    "cooling_fan_speed": "12",
+    "big_fan1_speed": "12",
+    "big_fan2_speed": "12",
+    "fan_gear": 198,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "757"
+  }
+}

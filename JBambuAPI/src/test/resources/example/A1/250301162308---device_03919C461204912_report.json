@@ -1,0 +1,9 @@
+{
+  "print": {
+    "nozzle_temper": 42.5625,
+    "bed_temper": 43.34375,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "10042"
+  }
+}

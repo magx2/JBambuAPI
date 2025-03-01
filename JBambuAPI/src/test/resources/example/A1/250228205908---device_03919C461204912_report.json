@@ -1,0 +1,11 @@
+{
+  "print": {
+    "nozzle_temper": 219.96875,
+    "bed_temper": 64.5625,
+    "mc_percent": 39,
+    "wifi_signal": "-56dBm",
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "885"
+  }
+}

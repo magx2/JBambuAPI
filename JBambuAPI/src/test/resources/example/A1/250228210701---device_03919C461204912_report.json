@@ -1,0 +1,10 @@
+{
+  "print": {
+    "nozzle_temper": 219.25,
+    "layer_num": 24,
+    "fan_gear": 201,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "1018"
+  }
+}

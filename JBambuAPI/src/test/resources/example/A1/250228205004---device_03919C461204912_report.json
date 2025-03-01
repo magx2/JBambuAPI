@@ -1,0 +1,9 @@
+{
+  "print": {
+    "wifi_signal": "-58dBm",
+    "mc_print_sub_stage": 0,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "624"
+  }
+}

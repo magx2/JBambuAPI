@@ -1,0 +1,9 @@
+{
+  "print": {
+    "bed_temper": 65.125,
+    "layer_num": 55,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "1426"
+  }
+}

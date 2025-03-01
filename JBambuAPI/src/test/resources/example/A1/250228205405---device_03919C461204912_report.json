@@ -1,0 +1,9 @@
+{
+  "print": {
+    "bed_temper": 64.65625,
+    "wifi_signal": "-57dBm",
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "740"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "print": {
+    "nozzle_temper": 207.78125,
+    "bed_temper": 63.59375,
+    "mc_print_stage": "1",
+    "heatbreak_fan_speed": "8",
+    "mc_percent": 100,
+    "mc_remaining_time": 0,
+    "wifi_signal": "-55dBm",
+    "gcode_state": "FINISH",
+    "gcode_file": "",
+    "stg": [],
+    "print_type": "idle",
+    "home_flag": 847070648,
+    "upgrade_state": {
+      "cur_state_code": 0
+    },
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "9714"
+  }
+}

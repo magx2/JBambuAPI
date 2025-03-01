@@ -1,0 +1,11 @@
+{
+  "print": {
+    "bed_temper": 64.96875,
+    "mc_remaining_time": 52,
+    "wifi_signal": "-53dBm",
+    "layer_num": 183,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "8485"
+  }
+}

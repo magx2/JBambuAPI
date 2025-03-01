@@ -1,0 +1,9 @@
+{
+  "print": {
+    "bed_temper": 64.8125,
+    "mc_print_sub_stage": 0,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "485"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "print": {
+    "nozzle_temper": 220.9375,
+    "nozzle_target_temper": 170,
+    "stg_cur": 3,
+    "fan_gear": 187,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "553"
+  }
+}

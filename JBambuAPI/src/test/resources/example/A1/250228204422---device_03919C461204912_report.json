@@ -1,0 +1,13 @@
+{
+  "print": {
+    "nozzle_temper": 119.34375,
+    "bed_temper": 64.25,
+    "ams_status": 258,
+    "ams": {
+      "tray_tar": "3"
+    },
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "458"
+  }
+}

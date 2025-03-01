@@ -1,0 +1,54 @@
+{
+  "info": {
+    "command": "get_version",
+    "sequence_id": "20050",
+    "module": [
+      {
+        "name": "ota",
+        "project_name": "N2S",
+        "sw_ver": "01.04.00.00",
+        "hw_ver": "OTA",
+        "sn": "03919C461204912",
+        "flag": 0
+      },
+      {
+        "name": "esp32",
+        "project_name": "N2S",
+        "sw_ver": "01.11.33.55",
+        "hw_ver": "AP05",
+        "sn": "03919C461204912",
+        "flag": 0
+      },
+      {
+        "name": "mc",
+        "project_name": "N2S",
+        "sw_ver": "00.00.29.76",
+        "loader_ver": "00.00.00.32",
+        "hw_ver": "MC02",
+        "sn": "04506A3C0902966",
+        "flag": 0
+      },
+      {
+        "name": "th",
+        "project_name": "N2S",
+        "sw_ver": "00.00.07.69",
+        "loader_ver": "00.00.00.26",
+        "hw_ver": "TH01",
+        "sn": "03B06A3C2825957",
+        "flag": 0
+      },
+      {
+        "name": "ams_f1/0",
+        "project_name": "",
+        "sw_ver": "00.00.07.94",
+        "loader_ver": "00.00.00.00",
+        "ota_ver": "00.00.00.00",
+        "hw_ver": "AMS_F102",
+        "sn": "03C12A3C0409402",
+        "flag": 0
+      }
+    ],
+    "result": "success",
+    "reason": ""
+  }
+}

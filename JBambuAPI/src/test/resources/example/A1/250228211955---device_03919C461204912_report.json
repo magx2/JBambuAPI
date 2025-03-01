@@ -1,0 +1,10 @@
+{
+  "print": {
+    "bed_temper": 64.5625,
+    "mc_remaining_time": 1,
+    "layer_num": 41,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "1383"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "print": {
+    "bed_temper": 23.84375,
+    "wifi_signal": "-58dBm",
+    "upgrade_state": {
+      "cur_state_code": 1
+    },
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "434"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "print": {
+    "bed_temper": 64.40625,
+    "heatbreak_fan_speed": "11",
+    "wifi_signal": "-52dBm",
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "489"
+  }
+}

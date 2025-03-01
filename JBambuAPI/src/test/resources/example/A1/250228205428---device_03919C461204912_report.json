@@ -1,0 +1,13 @@
+{
+  "print": {
+    "bed_temper": 64.34375,
+    "cooling_fan_speed": "12",
+    "big_fan1_speed": "12",
+    "big_fan2_speed": "12",
+    "wifi_signal": "-54dBm",
+    "fan_gear": 198,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "751"
+  }
+}

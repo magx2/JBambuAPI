@@ -1,0 +1,9 @@
+{
+  "print": {
+    "wifi_signal": "-57dBm",
+    "layer_num": 50,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "1420"
+  }
+}

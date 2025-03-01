@@ -1,0 +1,10 @@
+{
+  "print": {
+    "nozzle_temper": 249.1875,
+    "bed_temper": 64.28125,
+    "heatbreak_fan_speed": "11",
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "495"
+  }
+}

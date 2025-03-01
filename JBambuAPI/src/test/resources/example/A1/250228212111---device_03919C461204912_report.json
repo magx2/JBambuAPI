@@ -1,0 +1,11 @@
+{
+  "print": {
+    "mc_percent": 98,
+    "wifi_signal": "-54dBm",
+    "layer_num": 49,
+    "fan_gear": 204,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "1419"
+  }
+}

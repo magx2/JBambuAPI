@@ -1,0 +1,17 @@
+{
+  "print": {
+    "nozzle_temper": 219.75,
+    "bed_temper": 64.5625,
+    "cooling_fan_speed": "2",
+    "big_fan1_speed": "2",
+    "big_fan2_speed": "2",
+    "ams_status": 259,
+    "fan_gear": 42,
+    "ams": {
+      "tray_tar": "1"
+    },
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "759"
+  }
+}
