@@ -66,16 +66,16 @@ public final class PrinterClient implements AutoCloseable {
         }
 
         try {
-            var topic = "device/%s/#".formatted(config.serial());
+            var topic = "device/%s/report".formatted(config.serial());
             log.debug("Subscribing to {}", topic);
-            mqtt.subscribe(topic, (__, msg) -> {
+            mqtt.subscribe(topic, (finalTopic, msg) -> {
                 var payload = msg.getPayload();
                 if (log.isDebugEnabled()) {
                     log.debug("Message received: {}", new String(payload, UTF_8));
                 }
                 subscribers.forEach(subscriber -> {
                     try {
-                        subscriber.consume(topic, payload);
+                        subscriber.consume(finalTopic, payload);
                     } catch (Exception e) {
                         if (log.isWarnEnabled()) {
                             log.warn("Consumer {} could not accept message: {}",

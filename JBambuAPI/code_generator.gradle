@@ -1,0 +1,237 @@
+import groovy.json.JsonSlurper
+
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.StandardOpenOption
+import java.util.stream.Collectors
+
+task generateBambuPojos() {
+    def examplesDir = project.file("src/test/resources/example/A1")
+    inputs.dir(examplesDir)
+
+    def outputDir = project.file("build/generated/sources/pojo")
+    outputs.dir(outputDir)
+
+    doLast {
+        def path = Paths.get(examplesDir.toString())
+        def files = Files.walk(path)
+                .filter { Files.isRegularFile(it) && it.toString().endsWith(".json") }
+                .map { Files.readString(it) }
+                .collect {
+                    (new JsonSlurper()).parseText(it)
+                }
+        if (files.isEmpty()) throw new IllegalStateException("There are no files!")
+        def rootNode = new Branch("report", buildTree(files))
+        def reportClass = generateClasses(rootNode, 0)
+        def reportPath = Paths.get(outputDir.toString(), "pl", "grzeslowski", "jbambuapi", "Report.java")
+        Files.createDirectories(reportPath.parent)
+        Files.write(reportPath, reportClass.bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
+    }
+}
+compileJava.dependsOn "generateBambuPojos"
+sourcesJar.dependsOn "generateBambuPojos"
+
+String generateClasses(Branch branch, int indent) {
+    def text = "";
+    def fields = branch.nodes.collect { "${generateClassName(it)} ${generateFieldName(it.name)}" }.join(", ")
+
+    if (indent == 0) {
+        text += """\
+                    |package pl.grzeslowski.jbambuapi;
+                    |
+                    |import java.util.Map;
+                    |import java.util.List;""".stripMargin()
+    }
+
+    def params = branch.nodes.collect { sub ->
+        def examples = (sub instanceof Branch) ? "see class" : ((Leaf) sub).exampleValues.join(", ")
+        "${generateFieldName(sub.name)} examples: ${examples}"
+    }.join("\n * @param ")
+
+    def generated = ""
+    if (indent == 0) {
+        generated = "Generated from examples at ${ZonedDateTime.now()}"
+    }
+
+    text += """
+            |/**
+            | * $generated
+            | * @param ${params}
+            | */
+            |${indent == 0 ? "" : "static "}record ${generateClassName(branch.name)}(${fields}) {""".stripMargin().indent(indent * 2)
+
+    text += branch.nodes
+            .stream()
+            .filter { it instanceof Branch }
+            .map { generateClasses((Branch) it, indent + 1) }
+            .collect(Collectors.joining("\n"))
+    text += "}".indent(indent * 2)
+    return text
+}
+
+static String generateFieldName(String name) {
+    def parts = name.split('_')
+    if (parts.length == 1) return parts[0]
+    return parts[0] + parts[1..-1]*.capitalize().join('')
+}
+
+String generateClassName(Node node) {
+    return node instanceof Branch ? generateClassName(node.name) : generateClassName(((Leaf) node).type)
+}
+
+String generateClassName(JsonClass type) {
+    switch (type) {
+        case MapClass: return "Map<${generateClassName(type.key)}, ${generateClassName(type.value)}>"
+        case ListClass: return "List<${generateClassName(type.subClass)}>"
+        case SimpleClass: return type.clazz().simpleName
+        default: throw new IllegalArgumentException(type.toString())
+    }
+}
+
+static String generateClassName(String string) {
+    string = generateFieldName(string)
+    return string[0].toUpperCase() + string[1..-1]
+}
+
+static SortedSet<Node> buildTree(List<Map<String, Object>> maps) {
+    def nodes = [] as List<Node>
+
+    def groupedKeys = maps.stream()
+            .map { it.entrySet() }
+            .flatMap { it.stream() }
+            .filter { it.value != null && !(it.value instanceof Map) }
+            .collect(Collectors.groupingBy(
+                    { it.key },
+                    Collectors.mapping({ it.value }, Collectors.toSet())
+            ))
+
+    groupedKeys.each { key, values ->
+        def type = values.stream()
+                .filter { it != null }
+                .map { findJsonClass(it) }
+                .min { a, b -> a == b ? 0 : (a.clazz() == Double ? -1 : (b.clazz() == Double ? 1 : -1)) }
+                .orElseThrow()
+        nodes.add(new Leaf(key, type, values))
+    }
+
+    def subMaps = maps.stream()
+            .map { it.entrySet() }
+            .flatMap { it.stream() }
+            .filter { it.value instanceof Map }
+            .map { [it.key, it.value as Map<String, Object>] }
+            .collect(Collectors.groupingBy(
+                    { it[0] },
+                    Collectors.mapping({ it[1] }, Collectors.toList())
+            ))
+
+    subMaps.each { key, value ->
+        def subNodes = buildTree(value)
+        nodes.add(new Branch(key, subNodes))
+    }
+
+    return new TreeSet<>(nodes)
+}
+
+static JsonClass findJsonClass(def obj) {
+    switch (obj) {
+        case List: return obj.stream()
+                .map { findJsonClass(it) }
+                .map { new ListClass(it) }
+                .findAny()
+                .orElse(new ListClass(new SimpleClass(Object)))
+        case Map: return obj.entrySet()
+                .stream()
+                .map { new MapClass(findJsonClass(it.key), findJsonClass(it.value)) }
+                .findAny()
+                .orElse(new MapClass(new SimpleClass(Object), new SimpleClass(Object)))
+        default: {
+            def clazz = obj.getClass()
+            if (clazz == BigDecimal.class) {
+                clazz = Double.class
+            }
+            return new SimpleClass(clazz)
+        }
+    }
+}
+
+interface Node extends Comparable<Node> {
+    String name()
+
+    @Override
+    default int compareTo(Node o) {
+        return name() <=> o.name()
+    }
+}
+
+class Branch implements Node {
+    String name
+    SortedSet<Node> nodes
+
+    Branch(String name, SortedSet<Node> nodes) {
+        this.name = name
+        this.nodes = nodes
+    }
+
+    @Override
+    String name() {
+        return name
+    }
+}
+
+class Leaf implements Node {
+    String name
+    JsonClass type
+    Set<Object> exampleValues
+
+    Leaf(String name, JsonClass type, Set<Object> exampleValues) {
+        this.name = name
+        this.type = type
+        this.exampleValues = exampleValues
+    }
+
+    @Override
+    String name() {
+        return name
+    }
+}
+
+interface JsonClass {
+    Class<?> clazz()
+}
+
+class SimpleClass implements JsonClass {
+    Class<?> clazz
+
+    SimpleClass(Class<?> clazz) {
+        this.clazz = clazz
+    }
+
+    @Override
+    Class<?> clazz() {
+        return this.clazz
+    }
+}
+
+class ListClass implements JsonClass {
+    JsonClass subClass
+
+    ListClass(JsonClass subClass) {
+        this.subClass = subClass
+    }
+
+    @Override
+    Class<?> clazz() { return List }
+}
+
+class MapClass implements JsonClass {
+    JsonClass key
+    JsonClass value
+
+    MapClass(JsonClass key, JsonClass value) {
+        this.key = key
+        this.value = value
+    }
+
+    @Override
+    Class<?> clazz() { return Map }
+}

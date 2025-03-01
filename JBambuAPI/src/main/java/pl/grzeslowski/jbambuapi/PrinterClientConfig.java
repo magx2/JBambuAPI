@@ -1,5 +1,7 @@
 package pl.grzeslowski.jbambuapi;
 
+import org.eclipse.paho.client.mqttv3.MqttClient;
+
 import java.net.URI;
 import java.util.Arrays;
 import java.util.UUID;
@@ -23,7 +25,7 @@ public record PrinterClientConfig(
     public static PrinterClientConfig requiredFields(URI host, String username, String serial, char[] accessCode) {
         return new PrinterClientConfig(
                 host,
-                UUID.randomUUID().toString(),
+                MqttClient.generateClientId(),
                 username,
                 serial,
                 accessCode,
@@ -36,7 +38,7 @@ public record PrinterClientConfig(
     public static PrinterClientConfig buildDefault(String host, String serial, char[] accessCode) {
         return new PrinterClientConfig(
                 URI.create(SCHEME + host + ":" + DEFAULT_PORT),
-                UUID.randomUUID().toString(),
+                MqttClient.generateClientId(),
                 LOCAL_USERNAME,
                 serial,
                 accessCode,
