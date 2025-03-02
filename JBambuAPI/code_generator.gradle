@@ -67,7 +67,7 @@ String generateClasses(Branch branch, int indent) {
             |      ${fields}) {""".stripMargin().indent(indent * 2)
 
     text += """\
-        |public  $className merge($className delta) {""".stripMargin().indent((indent + 1) * 2)
+        |public $className merge($className delta) {""".stripMargin().indent((indent + 1) * 2)
 
     def assignments = branch.nodes
             .stream()
