@@ -6,7 +6,7 @@ import java.nio.file.StandardOpenOption
 import java.util.stream.Collectors
 
 task generateBambuPojos() {
-    def examplesDir = project.file("src/test/resources/example/A1")
+    def examplesDir = project.file("src/test/resources/example")
     inputs.dir(examplesDir)
 
     def outputDir = project.file("build/generated/sources/pojo")

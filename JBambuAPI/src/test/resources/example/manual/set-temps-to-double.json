@@ -1,0 +1,17 @@
+{
+  "print": {
+    "nozzle_temper": 23.03125,
+    "nozzle_target_temper": 140.1,
+    "bed_temper": 23.90625,
+    "bed_target_temper": 65.1,
+    "chamber_temper": 1.1,
+    "heatbreak_fan_speed": "3",
+    "ams_rfid_status": 2,
+    "wifi_signal": "-57dBm",
+    "stg_cur": 2,
+    "home_flag": 847070648,
+    "command": "push_status",
+    "msg": 1,
+    "sequence_id": "438"
+  }
+}
