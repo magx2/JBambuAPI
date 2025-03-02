@@ -53,12 +53,37 @@ String generateClasses(Branch branch, int indent) {
         generated = "Generated from examples at ${ZonedDateTime.now()}"
     }
 
+    def className = generateClassName(branch.name)
     text += """
             |/**
             | * $generated
             | * @param ${params}
             | */
-            |${indent == 0 ? "" : "static "}record ${generateClassName(branch.name)}(${fields}) {""".stripMargin().indent(indent * 2)
+            |${indent == 0 ? "" : "static "}record ${className}(${fields}) {""".stripMargin().indent(indent * 2)
+
+    text += """\
+        |public  $className merge($className delta) {""".stripMargin().indent((indent + 1) * 2)
+
+    def assignments = branch.nodes
+            .stream()
+            .map { node ->
+                def name = generateFieldName(node.name())
+                switch (node) {
+                    case Leaf: return "var ${name} = delta.${name} != null ? delta.${name} : this.${name};"
+                    case Branch: return "var $name = this.$name != null ? this.${name}.merge(delta.$name) : delta.$name;"
+                }
+            }
+            .collect(Collectors.joining("\n  "))
+    def fieldNames = branch.nodes
+            .stream()
+            .map { it.name() }
+            .map { generateFieldName(it) }
+            .collect(Collectors.joining(", "))
+    text += """\
+        |  if (delta == null) return this;
+        |  $assignments
+        |  return new $className($fieldNames); 
+        |}""".stripMargin().indent((indent + 1) * 2)
 
     text += branch.nodes
             .stream()
@@ -174,7 +199,7 @@ class Branch implements Node {
 
     @Override
     String name() {
-        return name
+        return this.name
     }
 }
 
@@ -191,7 +216,7 @@ class Leaf implements Node {
 
     @Override
     String name() {
-        return name
+        return this.name
     }
 }
 
