@@ -16,7 +16,7 @@ import static java.util.Collections.synchronizedList;
 @Slf4j
 public class PrinterWatcher implements ChannelMessageConsumer, AutoCloseable {
     private final ReadWriteLock fullStateLock = new ReentrantReadWriteLock();
-    private PrinterState fullState;
+    private Report fullState;
 
     private final ObjectMapper jsonMapper = new ObjectMapper();
     private final List<PrinterStateSubscriber> subscribers = synchronizedList(new LinkedList<>());
@@ -32,10 +32,10 @@ public class PrinterWatcher implements ChannelMessageConsumer, AutoCloseable {
         }
 
         try {
-            var delta = jsonMapper.readValue(data, PrinterState.class);
+            var delta = jsonMapper.readValue(data, Report.class);
             fullStateLock.writeLock().lock();
             try {
-                fullState = PrinterState.merge(fullState, delta);
+                fullState = fullState != null ? fullState.merge(delta) : delta;
             } finally {
                 fullStateLock.writeLock().unlock();
             }
@@ -81,6 +81,6 @@ public class PrinterWatcher implements ChannelMessageConsumer, AutoCloseable {
     }
 
     public static interface PrinterStateSubscriber {
-        void newPrinterState(PrinterState delta, PrinterState fullState);
+        void newPrinterState(Report delta, Report fullState);
     }
 }

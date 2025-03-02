@@ -139,7 +139,20 @@ static SortedSet<Node> buildTree(List<Map<String, Object>> maps) {
         def type = values.stream()
                 .filter { it != null }
                 .map { findJsonClass(it) }
-                .min { a, b -> a == b ? 0 : (a.clazz() == Double ? -1 : (b.clazz() == Double ? 1 : -1)) }
+                .min { a, b ->
+                    if (a == b) return 0
+
+                    if (a.clazz() == Double) return -1
+                    if (b.clazz() == Double) return 1
+
+                    if (a.clazz() == List) return -1
+                    if (b.clazz() == List) return 1
+
+                    if (a.clazz() == Map) return -1
+                    if (b.clazz() == Map) return 1
+
+                    return -1
+                }
                 .orElseThrow()
         nodes.add(new Leaf(key, type, values))
     }
@@ -172,7 +185,17 @@ static JsonClass findJsonClass(def obj) {
         case Map: return obj.entrySet()
                 .stream()
                 .map { new MapClass(findJsonClass(it.key), findJsonClass(it.value)) }
-                .findAny()
+                .reduce { a, b ->
+                    def key = a.key
+                    def value = a.value
+                    if (a.key.clazz() != b.key.clazz()) {
+                        key = new SimpleClass(Object)
+                    }
+                    if (a.value.clazz() != b.value.clazz()) {
+                        value = new SimpleClass(Object)
+                    }
+                    return new MapClass(key, value)
+                }
                 .orElse(new MapClass(new SimpleClass(Object), new SimpleClass(Object)))
         default: {
             def clazz = obj.getClass()
