@@ -4,7 +4,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,7 +12,6 @@ import java.util.ArrayList;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -24,7 +22,7 @@ class PrinterWatcherTest {
         // given
         var watcher = new PrinterWatcher();
         var files = readExampleJsonFiles();
-        var subscriber = mock(PrinterWatcher.PrinterStateSubscriber.class);
+        var subscriber = mock(PrinterWatcher.StateSubscriber.class);
 
         // when
         watcher.subscribe(subscriber);
@@ -33,7 +31,7 @@ class PrinterWatcherTest {
                 .forEach(bytes -> watcher.consume("device/123/report", bytes));
 
         // then
-        verify(subscriber, times(files.size())).newPrinterState(any(), any());
+        verify(subscriber, times(files.size())).newState(any(), any());
     }
 
     public static ArrayList<String> readExampleJsonFiles() throws IOException {

@@ -19,7 +19,7 @@ public class PrinterWatcher implements ChannelMessageConsumer, AutoCloseable {
     private Report fullState;
 
     private final ObjectMapper jsonMapper = new ObjectMapper();
-    private final List<PrinterStateSubscriber> subscribers = synchronizedList(new LinkedList<>());
+    private final List<StateSubscriber> subscribers = synchronizedList(new LinkedList<>());
 
     public PrinterWatcher() {
         jsonMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -41,7 +41,7 @@ public class PrinterWatcher implements ChannelMessageConsumer, AutoCloseable {
             }
             subscribers.forEach(subscriber -> {
                 try {
-                    subscriber.newPrinterState(delta, fullState);
+                    subscriber.newState(delta, fullState);
                 } catch (Exception e) {
                     log.warn("Consumer {} could not accept message: {}", subscriber, delta, e);
                 }
@@ -62,11 +62,11 @@ public class PrinterWatcher implements ChannelMessageConsumer, AutoCloseable {
         }
     }
 
-    public void subscribe(PrinterStateSubscriber subscriber) {
+    public void subscribe(StateSubscriber subscriber) {
         subscribers.add(subscriber);
     }
 
-    public boolean unsubscribe(PrinterStateSubscriber subscriber) {
+    public boolean unsubscribe(StateSubscriber subscriber) {
         var remove = subscribers.remove(subscriber);
         if (!remove) {
             log.warn("Subscriber {} was not removed! " +
@@ -80,7 +80,7 @@ public class PrinterWatcher implements ChannelMessageConsumer, AutoCloseable {
 
     }
 
-    public static interface PrinterStateSubscriber {
-        void newPrinterState(Report delta, Report fullState);
+    public static interface StateSubscriber {
+        void newState(Report delta, Report fullState);
     }
 }
