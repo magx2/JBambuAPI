@@ -33,13 +33,17 @@ sourcesJar.dependsOn "generateBambuPojos"
 
 String generateClasses(Branch branch, int indent) {
     def text = "";
-    def fields = branch.nodes.collect { "${generateClassName(it)} ${generateFieldName(it.name)}" }.join(", ")
+    def fields = branch.nodes
+            .stream()
+            .map { " @JsonProperty(\"${it.name}\") ${generateClassName(it)} ${generateFieldName(it.name)}" }
+            .collect(Collectors.joining(",\n      "))
 
     if (indent == 0) {
         text += """\
                     |package pl.grzeslowski.jbambuapi;
                     |
                     |import java.util.Map;
+                    |import com.fasterxml.jackson.annotation.JsonProperty;
                     |import java.util.List;""".stripMargin()
     }
 
@@ -59,7 +63,8 @@ String generateClasses(Branch branch, int indent) {
             | * $generated
             | * @param ${params}
             | */
-            |${indent == 0 ? "" : "static "}record ${className}(${fields}) {""".stripMargin().indent(indent * 2)
+            |${indent == 0 ? "" : "static "}record ${className}(
+            |      ${fields}) {""".stripMargin().indent(indent * 2)
 
     text += """\
         |public  $className merge($className delta) {""".stripMargin().indent((indent + 1) * 2)
