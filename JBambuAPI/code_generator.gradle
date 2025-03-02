@@ -63,7 +63,7 @@ String generateClasses(Branch branch, int indent) {
             | * $generated
             | * @param ${params}
             | */
-            |${indent == 0 ? "" : "static "}record ${className}(
+            |public ${indent == 0 ? "" : "static "}record ${className}(
             |      ${fields}) {""".stripMargin().indent(indent * 2)
 
     text += """\
