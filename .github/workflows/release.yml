@@ -40,7 +40,7 @@ jobs:
             -Psigning.secretKeyRingFile=$(realpath ./secring.gpg)
           
           # Define the file path
-          FILE="build/tag.txt"
+          FILE="JBambuAPI/build/tag.txt"
 
           # Check if the file exists
           if [ -f "$FILE" ]; then
