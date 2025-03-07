@@ -1,0 +1,72 @@
+tasks.register('javadocJar', Jar) {
+    archiveClassifier.set('javadoc')
+    from javadoc
+}
+
+tasks.register('sourcesJar', Jar) {
+    archiveClassifier.set('sources')
+    from sourceSets.main.allSource
+}
+
+javadoc {
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+}
+
+group = 'pl.grzeslowski'
+archivesBaseName = project.name
+version = project.maven_version
+
+def final githubRepo = "magx2/JBambuAPI"
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = project.name
+            from components.java
+
+            pom {
+                name = project.name
+                description = project.description
+                packaging = 'jar'
+                url = "https://github.com/${githubRepo}"
+
+                scm {
+                    connection = "scm:git:git://github.com/${githubRepo}.git"
+                    developerConnection = "scm:git:git://github.com/${githubRepo}.git"
+                    url = "https://github.com/${githubRepo}.git"
+                }
+
+                licenses {
+                    license {
+                        name = "GNU v2.1"
+                        url = "https://github.com/magx2/JBambuAPI/blob/master/LICENSE"
+                    }
+                }
+
+                developers {
+                    developer {
+                        id.set('magx2')
+                        name.set('Martin Grzeslowski')
+                        email.set('hello@grzeslowski.pl')
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = "sonatype"
+            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = findProperty("ossrhUsername") ?: System.getenv("OSSRH_USERNAME") ?: ""
+                password = findProperty("ossrhPassword") ?: System.getenv("OSSRH_PASSWORD") ?: ""
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
