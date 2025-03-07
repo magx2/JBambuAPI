@@ -17,6 +17,7 @@ javadoc {
 group = 'pl.grzeslowski'
 archivesBaseName = project.name
 version = project.maven_version
+description = "Integration of Bambu Labs MQTT protocol with Java and OpenHAB for real-time 3D printer monitoring and control."
 
 def final githubRepo = "magx2/JBambuAPI"
 publishing {
