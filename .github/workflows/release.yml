@@ -59,7 +59,7 @@ jobs:
           fi
           
           ./gradlew nextSnapshot
-          git add gradle.properties
+          git add JBambuAPI/gradle.properties
           git commit -m "Update JBambuAPI to SNAPSHOT version in gradle.properties"
           
           echo "Pushing master to origin..."
