@@ -3,7 +3,8 @@
 1. Run [Release with Gradle](https://github.com/magx2/JBambuAPI/actions/workflows/release.yml) action
 2. Go to [sonatype](https://s01.oss.sonatype.org/#stagingRepositories) and select `Staging Repositories`
 3. Select `plgrzeslowski-100X` and click `close` and after `release`
-4. Artifact should be visible after some under this [link](https://mvnrepository.com/artifact/pl.grzeslowski/JBambuAPI)
+4. Artifact should be visible after some time under
+   this [link](https://mvnrepository.com/artifact/pl.grzeslowski/JBambuAPI)
 
 ## Prerequisites
 
