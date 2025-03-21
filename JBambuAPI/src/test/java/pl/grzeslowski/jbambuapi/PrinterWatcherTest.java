@@ -2,6 +2,7 @@ package pl.grzeslowski.jbambuapi;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import pl.grzeslowski.jbambuapi.mqtt.PrinterWatcher;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -1,4 +1,4 @@
-package pl.grzeslowski.jbambuapi;
+package pl.grzeslowski.jbambuapi.mqtt;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -29,9 +29,9 @@ import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
-import static pl.grzeslowski.jbambuapi.CommunicationException.fromJsonException;
-import static pl.grzeslowski.jbambuapi.CommunicationException.fromMqttException;
-import static pl.grzeslowski.jbambuapi.PrinterClient.Channel.LedControlCommand.LedMode.*;
+import static pl.grzeslowski.jbambuapi.mqtt.CommunicationException.fromJsonException;
+import static pl.grzeslowski.jbambuapi.mqtt.CommunicationException.fromMqttException;
+import static pl.grzeslowski.jbambuapi.mqtt.PrinterClient.Channel.LedControlCommand.LedMode.*;
 
 public final class PrinterClient implements AutoCloseable {
     private final AtomicInteger messageId = new AtomicInteger(1);

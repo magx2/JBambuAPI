@@ -1,8 +1,5 @@
 package pl.grzeslowski.jbambuapi;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -25,11 +22,9 @@ import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
-import static java.util.stream.Collectors.*;
-import static org.assertj.core.api.Assertions.assertThat;
-import static pl.grzeslowski.jbambuapi.PrinterClient.Channel.PushingCommand.defaultPushingCommand;
-import static pl.grzeslowski.jbambuapi.PrinterClientConfig.DEFAULT_PORT;
-import static pl.grzeslowski.jbambuapi.PrinterClientConfig.SCHEME;
+import static pl.grzeslowski.jbambuapi.mqtt.PrinterClient.Channel.PushingCommand.defaultPushingCommand;
+import static pl.grzeslowski.jbambuapi.mqtt.PrinterClientConfig.DEFAULT_PORT;
+import static pl.grzeslowski.jbambuapi.mqtt.PrinterClientConfig.SCHEME;
 
 @Slf4j
 class LocalTest {

@@ -1,4 +1,4 @@
-package pl.grzeslowski.jbambuapi;
+package pl.grzeslowski.jbambuapi.mqtt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;

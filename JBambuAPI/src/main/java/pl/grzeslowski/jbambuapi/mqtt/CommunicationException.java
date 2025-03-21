@@ -1,4 +1,4 @@
-package pl.grzeslowski.jbambuapi;
+package pl.grzeslowski.jbambuapi.mqtt;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.eclipse.paho.client.mqttv3.MqttException;

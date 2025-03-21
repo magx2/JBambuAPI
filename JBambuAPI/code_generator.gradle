@@ -23,7 +23,7 @@ task generateBambuPojos() {
         if (files.isEmpty()) throw new IllegalStateException("There are no files!")
         def rootNode = new Branch("report", buildTree(files))
         def reportClass = generateClasses(rootNode, 0)
-        def reportPath = Paths.get(outputDir.toString(), "pl", "grzeslowski", "jbambuapi", "Report.java")
+        def reportPath = Paths.get(outputDir.toString(), "pl", "grzeslowski", "jbambuapi", "mqtt", "Report.java")
         Files.createDirectories(reportPath.parent)
         Files.write(reportPath, reportClass.bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
     }
@@ -40,7 +40,7 @@ String generateClasses(Branch branch, int indent) {
 
     if (indent == 0) {
         text += """\
-                    |package pl.grzeslowski.jbambuapi;
+                    |package pl.grzeslowski.jbambuapi.mqtt;
                     |
                     |import java.util.Map;
                     |import com.fasterxml.jackson.annotation.JsonProperty;

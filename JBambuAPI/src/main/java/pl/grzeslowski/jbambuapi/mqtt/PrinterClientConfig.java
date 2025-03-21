@@ -1,10 +1,9 @@
-package pl.grzeslowski.jbambuapi;
+package pl.grzeslowski.jbambuapi.mqtt;
 
 import org.eclipse.paho.client.mqttv3.MqttClient;
 
 import java.net.URI;
 import java.util.Arrays;
-import java.util.UUID;
 
 public record PrinterClientConfig(
         URI uri,
