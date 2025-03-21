@@ -4,7 +4,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import pl.grzeslowski.jbambuapi.camera.ASeriesCamera;
+import pl.grzeslowski.jbambuapi.camera.CameraConfig;
+import pl.grzeslowski.jbambuapi.mqtt.PrinterClient;
+import pl.grzeslowski.jbambuapi.mqtt.PrinterClientConfig;
+import pl.grzeslowski.jbambuapi.mqtt.PrinterWatcher;
 
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
@@ -15,9 +21,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -114,5 +121,44 @@ class LocalTest {
                 username,
                 serial,
                 accessCode.toCharArray());
+    }
+
+    private static CameraConfig buildCameraConfig() throws URISyntaxException {
+        var host = requireNonNull(System.getenv("HOST"), "Please pass HOST");
+        var accessCode = requireNonNull(System.getenv("ACCESS_CODE"), "Please pass ACCESS_CODE");
+        var username = requireNonNull(System.getenv("USER"), "Please pass USER");
+
+        return new CameraConfig(
+                host,
+                CameraConfig.DEFAULT_PORT,
+                username,
+                accessCode.getBytes(UTF_8),
+                CameraConfig.BAMBU_CERTIFICATE);
+    }
+
+    @Test
+    @Disabled
+    void camera() throws Exception {
+        // given
+        try (var config = buildCameraConfig();
+             var camera = new ASeriesCamera(config)) {
+
+            // when
+            camera.connect();
+            for (var next : camera) {
+                saveImage(next);
+            }
+
+            // then
+        }
+    }
+
+    private void saveImage(byte[] imageData) throws IOException {
+        var timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        var image = "frame_" + timestamp + ".jpg";
+        try (var fos = new FileOutputStream(image)) {
+            fos.write(imageData);
+            log.debug("Image saved: {}", image);
+        }
     }
 }

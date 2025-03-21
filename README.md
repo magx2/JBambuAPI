@@ -37,7 +37,7 @@ establishes a connection with the printer, sends commands, and subscribes to rep
 ### Usage Example
 
 ```java
-import pl.grzeslowski.jbambuapi.*;
+import pl.grzeslowski.jbambuapi.mqtt.*;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
 public class PrinterClientExample {
@@ -82,7 +82,7 @@ reports to keep track of the full printer status.
 ### Usage Example
 
 ```java
-import pl.grzeslowski.jbambuapi.*;
+import pl.grzeslowski.jbambuapi.camera.*;
 
 public class PrinterWatcherExample {
     public static void main(String[] args) {
@@ -115,3 +115,68 @@ public class PrinterWatcherExample {
 This documentation provides a basic understanding of JBambuAPI components and their usage. Let us know if you need
 further details or refinements!
 
+## ASeriesCamera & PSeriesCamera
+
+### Overview
+
+The `ASeriesCamera` and `PSeriesCamera` classes provide access to live JPEG frames from A-series and P-series Bambu Lab
+printers using a TLS connection. They are built on top of `TlsCamera`, which handles secure socket communication,
+authentication, and streaming.
+
+Both classes require a `CameraConfig` object to establish the connection.
+
+### Usage Example
+
+```java
+import pl.grzeslowski.jbambuapi.*;
+
+import java.util.NoSuchElementException;
+
+public class CameraExample {
+    public static void main(String[] args) throws Exception {
+        try (CameraConfig config = new CameraConfig(
+                "192.168.1.100", // IP or hostname
+                CameraConfig.DEFAULT_PORT,
+                CameraConfig.LOCAL_USERNAME,
+                "12345678".getBytes(), // use correct access code 
+                CameraConfig.BAMBU_CERTIFICATE); // TLS certificate string 
+             ASeriesCamera camera = new ASeriesCamera(config)) { // or new PSeriesCamera(config)
+            assert !camera.isConnected();
+            camera.connect();
+            assert camera.isConnected();
+
+            try {
+                for (byte[] frame : camera) {
+                    saveImage(frame);
+                }
+            } catch (NoSuchElementException ex) {
+                // after receiving NoSuchElementException camera will not be connected anymore
+                assert !camera.isConnected();
+                // you can reuse camera with `connect` method
+            }
+        }
+    }
+
+    private static void saveImage(byte[] imageData) throws IOException {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String image = "frame_" + timestamp + ".jpg";
+        try (FileOutputStream fos = new FileOutputStream(image)) {
+            fos.write(imageData);
+        }
+    }
+}
+```
+
+### Key Methods
+
+- `connect()`: Connects to the camera using TLS and authenticates.
+- `isConnected()`: Checks if the socket connection is active.
+- `iterator()`: Returns an iterator over JPEG byte arrays (frames).
+- `close()`: Closes the connection safely.
+
+### Notes
+
+- You must call `connect()` before iterating over frames.
+- The camera connection is secured with TLS and requires proper authentication.
+- If the socket breaks or the received data is corrupted, a `NoSuchElementException` will be thrown during iteration.
+  Always wrap the frame reading logic in a `try-catch` block to handle this gracefully.
