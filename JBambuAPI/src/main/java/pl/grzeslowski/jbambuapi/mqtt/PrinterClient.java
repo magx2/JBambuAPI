@@ -5,10 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.paho.client.mqttv3.MqttClient;
-import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
-import org.eclipse.paho.client.mqttv3.MqttException;
-import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +54,31 @@ public final class PrinterClient implements AutoCloseable {
     }
 
     public void connect() throws CommunicationException, NoSuchAlgorithmException, KeyManagementException {
+        connect(null);
+    }
+
+    public void connect(ConnectionCallback connectionCallback) throws CommunicationException, NoSuchAlgorithmException, KeyManagementException {
+        if (connectionCallback != null) {
+            mqtt.setCallback(new MqttCallbackExtended() {
+                @Override
+                public void connectComplete(boolean reconnect, String serverURI) {
+                    connectionCallback.connectComplete(reconnect);
+                }
+
+                @Override
+                public void connectionLost(Throwable cause) {
+                    connectionCallback.connectionLost(cause);
+                }
+
+                @Override
+                public void messageArrived(String topic, MqttMessage message) {
+                }
+
+                @Override
+                public void deliveryComplete(IMqttDeliveryToken token) {
+                }
+            });
+        }
         var options = buildMqttOptions();
         try {
             log.debug("Connecting to MQTT {}", config.uri());
@@ -140,6 +162,7 @@ public final class PrinterClient implements AutoCloseable {
     public void close() {
         subscribers.clear();
         try {
+            mqtt.setCallback(null);
             log.debug("Closing MQTT {}", config.uri());
             mqtt.disconnect();
         } catch (MqttException e) {
