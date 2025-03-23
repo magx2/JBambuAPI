@@ -77,7 +77,13 @@ public class PrinterWatcher implements ChannelMessageConsumer, AutoCloseable {
 
     @Override
     public void close() {
-
+        subscribers.clear();
+        fullStateLock.writeLock().lock();
+        try {
+            fullState = null;
+        } finally {
+            fullStateLock.writeLock().unlock();
+        }
     }
 
     public static interface StateSubscriber {
