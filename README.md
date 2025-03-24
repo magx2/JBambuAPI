@@ -115,6 +115,37 @@ public class PrinterWatcherExample {
 This documentation provides a basic understanding of JBambuAPI components and their usage. Let us know if you need
 further details or refinements!
 
+## ConnectionCallback
+
+To track MQTT connection events (such as connection loss and reconnection), implement the `ConnectionCallback` interface
+and pass it to the `PrinterClient.connect()` method.
+
+### Example
+
+```java
+PrinterClient client = new PrinterClient(config);
+client.
+
+connect(new ConnectionCallback() {
+  @Override
+  public void connectComplete ( boolean reconnect){
+    if (reconnect) {
+      System.out.println("Reconnected to the printer MQTT broker.");
+    } else {
+      System.out.println("Initial connection established.");
+    }
+  }
+
+  @Override
+  public void connectionLost (Throwable cause){
+    System.err.println("Connection lost: " + cause.getMessage());
+  }
+});
+```
+
+This provides a convenient way to respond to connection changes in environments where printer availability might
+fluctuate (e.g., Wi-Fi or power interruptions).
+
 ## ASeriesCamera & PSeriesCamera
 
 ### Overview
