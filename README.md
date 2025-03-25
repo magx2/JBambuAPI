@@ -123,24 +123,26 @@ and pass it to the `PrinterClient.connect()` method.
 ### Example
 
 ```java
-PrinterClient client = new PrinterClient(config);
-client.
+public class PrinterWatcherExample {
+  public static void main(String[] args) {
+    PrinterClient client = new PrinterClient(config);
+    client.connect(new ConnectionCallback() {
+      @Override
+      public void connectComplete(boolean reconnect) {
+        if (reconnect) {
+          System.out.println("Reconnected to the printer MQTT broker.");
+        } else {
+          System.out.println("Initial connection established.");
+        }
+      }
 
-connect(new ConnectionCallback() {
-  @Override
-  public void connectComplete ( boolean reconnect){
-    if (reconnect) {
-      System.out.println("Reconnected to the printer MQTT broker.");
-    } else {
-      System.out.println("Initial connection established.");
-    }
+      @Override
+      public void connectionLost(Throwable cause) {
+        System.err.println("Connection lost: " + cause.getMessage());
+      }
+    });
   }
-
-  @Override
-  public void connectionLost (Throwable cause){
-    System.err.println("Connection lost: " + cause.getMessage());
-  }
-});
+}
 ```
 
 This provides a convenient way to respond to connection changes in environments where printer availability might
