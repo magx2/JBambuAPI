@@ -39,6 +39,7 @@ dependencies {
     // test
     testImplementation group: 'org.assertj', name: 'assertj-core', version: '3.27.3'
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '5.15.2'
+    testImplementation 'org.springframework:spring-test:5.1.2.RELEASE'
 
     // lombok
     compileOnly 'org.projectlombok:lombok:' + project.dep_lombok
