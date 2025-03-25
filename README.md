@@ -123,7 +123,7 @@ and pass it to the `PrinterClient.connect()` method.
 ### Example
 
 ```java
-public class PrinterWatcherExample {
+public class Example {
   public static void main(String[] args) {
     PrinterClient client = new PrinterClient(config);
     client.connect(new ConnectionCallback() {
