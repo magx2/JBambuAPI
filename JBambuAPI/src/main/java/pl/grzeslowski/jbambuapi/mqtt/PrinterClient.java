@@ -3,6 +3,8 @@ package pl.grzeslowski.jbambuapi.mqtt;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.paho.client.mqttv3.*;
@@ -21,7 +23,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.stream;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.Optional.ofNullable;
@@ -312,6 +313,9 @@ public final class PrinterClient implements AutoCloseable {
         }
 
         private Message buildMessage(PrintSpeedCommand printSpeedCommand) {
+            if (!printSpeedCommand.canSend()) {
+                throw new IllegalArgumentException("Cannot send %s command!".formatted(printSpeedCommand));
+            }
             return Message.request(Message.Payload.print(Map.of(
                     "command", "print_speed",
                     "param", printSpeedCommand.level)));
@@ -587,17 +591,37 @@ public final class PrinterClient implements AutoCloseable {
          * <p>
          * <a href="https://github.com/Doridian/OpenBambuAPI/blob/main/mqtt.md#printprint_speed">"printprint_speed" API Doc</a>
          */
-        @RequiredArgsConstructor
-        public static enum PrintSpeedCommand implements Command {
-            SILENT(1), STANDARD(2), SPORT(3), LUDICROUS(4);
+        @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
+        @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+        public static final class PrintSpeedCommand implements Command {
+            public static final PrintSpeedCommand SILENT = new PrintSpeedCommand(1, "Silent");
+            public static final PrintSpeedCommand STANDARD = new PrintSpeedCommand(2, "Standard");
+            public static final PrintSpeedCommand SPORT = new PrintSpeedCommand(3, "Sport");
+            public static final PrintSpeedCommand LUDICROUS = new PrintSpeedCommand(4, "Ludicrous");
+            private static final Set<PrintSpeedCommand> VALUES = Set.of(SILENT, STANDARD, SPORT, LUDICROUS);
+
             @Getter
+            @EqualsAndHashCode.Include
             private final int level;
+            @Getter
+            private final String name;
+
+            public boolean canSend() {
+                return VALUES.contains(this);
+            }
 
             public static PrintSpeedCommand findByLevel(int level) {
-                return stream(values())
+                return VALUES.stream()
                         .filter(cmd -> cmd.level == level)
                         .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException("Unknown level: " + level));
+                        .orElseGet(() -> new PrintSpeedCommand(level, "Unknown(%d)".formatted(level)));
+            }
+
+            public static PrintSpeedCommand findByName(String name) {
+                return VALUES.stream()
+                        .filter(cmd -> cmd.name.equalsIgnoreCase(name))
+                        .findFirst()
+                        .orElseThrow(() -> new IllegalArgumentException("Unknown name: " + name));
             }
         }
 
