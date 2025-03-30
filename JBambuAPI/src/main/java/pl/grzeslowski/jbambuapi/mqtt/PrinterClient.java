@@ -164,7 +164,9 @@ public final class PrinterClient implements AutoCloseable {
         try {
             mqtt.setCallback(null);
             log.debug("Closing MQTT {}", config.uri());
-            mqtt.disconnect();
+            if (mqtt.isConnected()) {
+                mqtt.disconnect();
+            }
         } catch (MqttException e) {
             throw fromMqttException("Cannot disconnect from MQTT at %s! ".formatted(config.uri()) + e.getLocalizedMessage(), e);
         }
