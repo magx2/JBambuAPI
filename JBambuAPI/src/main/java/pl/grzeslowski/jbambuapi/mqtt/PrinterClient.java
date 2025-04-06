@@ -38,14 +38,20 @@ public final class PrinterClient implements AutoCloseable {
     @Getter
     private final Channel channel = new Channel();
 
-    public PrinterClient(PrinterClientConfig config) throws CommunicationException {
+    PrinterClient(PrinterClientConfig config, MqttClient mqtt) {
         log = LoggerFactory.getLogger(getClass() + "." + config.serial());
         log.debug("Connecting to MQTT broker");
         this.config = config;
-        var uri = config.uri().toString();
+        this.mqtt = mqtt;
+    }
+
+    public PrinterClient(PrinterClientConfig config) throws CommunicationException {
+        this(config, buildMqtt(config.uri().toString(), config.clientId()));
+    }
+
+    private static MqttClient buildMqtt(String uri, String clientId) {
         try {
-            log.debug("Creating MQTT {}", uri);
-            this.mqtt = new MqttClient(uri, config.clientId());
+            return new MqttClient(uri, clientId);
         } catch (MqttException e) {
             throw fromMqttException("Cannot create MQTT at %s! ".formatted(uri) + e.getLocalizedMessage(), e);
         }
@@ -234,7 +240,7 @@ public final class PrinterClient implements AutoCloseable {
                 return null;
             }
             var copy = new HashMap<>(map);
-            copy.put("sequence_id", id);
+            copy.put("sequence_id", id + "");
             return unmodifiableMap(copy);
         }
 
@@ -315,7 +321,7 @@ public final class PrinterClient implements AutoCloseable {
             }
             return Message.request(Message.Payload.print(Map.of(
                     "command", "print_speed",
-                    "param", printSpeedCommand.level)));
+                    "param", printSpeedCommand.level + "")));
         }
 
         private Message buildMessage(GCodeFileCommand gCodeFileCommand) {
