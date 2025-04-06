@@ -3,10 +3,7 @@ package pl.grzeslowski.jbambuapi.mqtt;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.eclipse.paho.client.mqttv3.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -593,6 +590,7 @@ public final class PrinterClient implements AutoCloseable {
          */
         @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
         @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+        @ToString
         public static final class PrintSpeedCommand implements Command {
             public static final PrintSpeedCommand SILENT = new PrintSpeedCommand(1, "Silent");
             public static final PrintSpeedCommand STANDARD = new PrintSpeedCommand(2, "Standard");
