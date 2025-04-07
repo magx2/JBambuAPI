@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.assertArg;
 import static org.mockito.ArgumentMatchers.eq;
@@ -131,5 +132,59 @@ class PrinterClientCommandTest {
         assertThat(map)
                 .as(new String(lastMessage.getPayload()))
                 .isEqualTo(expected);
+    }
+
+    @Test
+    @DisplayName("should send RawCommand")
+    void sendRawCommand() throws Exception {
+        // given
+        var command = new RawCommand() {
+            @Override
+            public String topic() {
+                return "m-y-t-o-p-i-c";
+            }
+
+            @Override
+            public byte[] buildRawCommand(long sequenceId) {
+                return "{\"foo\": \"boo\", \"sequenceId\": %d}".formatted(sequenceId).getBytes(UTF_8);
+            }
+        };
+
+        // when
+        printerClient.getChannel().sendCommand(command);
+
+        // then
+        verify(mqttClient).publish(
+                eq("device/%s/m-y-t-o-p-i-c".formatted(config.serial())),
+                assertArg(message ->
+                        assertThat(new String(message.getPayload()))
+                                .isEqualTo("{\"foo\": \"boo\", \"sequenceId\": 1}")));
+    }
+
+    @Test
+    @DisplayName("should send RawStringCommand")
+    void sendRawStringCommand() throws Exception {
+        // given
+        var command = new RawStringCommand() {
+            @Override
+            public String topic() {
+                return "m-y-t-o-p-i-c";
+            }
+
+            @Override
+            public String buildRawStringCommand(long sequenceId) {
+                return "{\"foo\": \"boo\", \"sequenceId\": %d}".formatted(sequenceId);
+            }
+        };
+
+        // when
+        printerClient.getChannel().sendCommand(command);
+
+        // then
+        verify(mqttClient).publish(
+                eq("device/%s/m-y-t-o-p-i-c".formatted(config.serial())),
+                assertArg(message ->
+                        assertThat(new String(message.getPayload()))
+                                .isEqualTo("{\"foo\": \"boo\", \"sequenceId\": 1}")));
     }
 }

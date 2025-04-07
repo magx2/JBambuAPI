@@ -22,6 +22,7 @@ import static java.lang.String.join;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.synchronizedList;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.Objects.requireNonNull;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static pl.grzeslowski.jbambuapi.mqtt.CommunicationException.fromJsonException;
@@ -179,46 +180,52 @@ public final class PrinterClient implements AutoCloseable {
     public class Channel {
         public void sendCommand(Command command) {
             var id = messageId.getAndIncrement();
-
-            var message = switch (command) {
-                case InfoCommand info -> buildMessage(info);
-                case AmsControlCommand amsControlCommand -> buildMessage(amsControlCommand);
-                case AmsFilamentSettingCommand amsFilamentSettingCommand -> buildMessage(amsFilamentSettingCommand);
-                case AmsUserSettingCommand amsUserSettingCommand -> buildMessage(amsUserSettingCommand);
-                case ChangeFilamentCommand changeFilamentCommand -> buildMessage(changeFilamentCommand);
-                case GCodeFileCommand gCodeFile -> buildMessage(gCodeFile);
-                case GCodeLineCommand gCodeLine -> buildMessage(gCodeLine);
-                case IpCamRecordCommand ipCamRecord -> buildMessage(ipCamRecord);
-                case IpCamTimelapsCommand ipCamTimelaps -> buildMessage(ipCamTimelaps);
-                case LedControlCommand ledControl -> buildMessage(ledControl);
-                case PrintCommand printCommand -> buildMessage(printCommand);
-                case PrintSpeedCommand printSpeedCommand -> buildMessage(printSpeedCommand);
-                case PushingCommand pushingCommand -> buildMessage(pushingCommand);
-                case SystemCommand systemCommand -> buildMessage(systemCommand);
-                case XCamControlCommand xCamControl -> buildMessage(xCamControl);
-            };
-            message = addSequenceId(message, id);
-            var topic = "device/%s/%s".formatted(config.serial(), message.topic);
-
-            try {
-                var json = jsonMapper.writeValueAsBytes(message.payload);
-                if (log.isDebugEnabled()) {
-                    log.debug("Sending command {} to topic {} with json {}", command, topic, new String(json, UTF_8));
-                }
-                var mqttMessage = new MqttMessage(json);
-                mqttMessage.setId(id);
-                // set QoS to 0 because in LAN mode the publish method was hanging for eternity
-                mqttMessage.setQos(0);
+            String topicName;
+            byte[] json;
+            if (command instanceof RawCommand rawCommand) {
+                topicName = requireNonNull(rawCommand.topic(), "RawCommand %s did returned null topic!".formatted(rawCommand));
+                json = requireNonNull(rawCommand.buildRawCommand(id), "RawCommand %s did returned null payload!".formatted(rawCommand));
+            } else {
+                var message = switch (command) {
+                    case InfoCommand info -> buildMessage(info);
+                    case AmsControlCommand amsControlCommand -> buildMessage(amsControlCommand);
+                    case AmsFilamentSettingCommand amsFilamentSettingCommand -> buildMessage(amsFilamentSettingCommand);
+                    case AmsUserSettingCommand amsUserSettingCommand -> buildMessage(amsUserSettingCommand);
+                    case ChangeFilamentCommand changeFilamentCommand -> buildMessage(changeFilamentCommand);
+                    case GCodeFileCommand gCodeFile -> buildMessage(gCodeFile);
+                    case GCodeLineCommand gCodeLine -> buildMessage(gCodeLine);
+                    case IpCamRecordCommand ipCamRecord -> buildMessage(ipCamRecord);
+                    case IpCamTimelapsCommand ipCamTimelaps -> buildMessage(ipCamTimelaps);
+                    case LedControlCommand ledControl -> buildMessage(ledControl);
+                    case PrintCommand printCommand -> buildMessage(printCommand);
+                    case PrintSpeedCommand printSpeedCommand -> buildMessage(printSpeedCommand);
+                    case PushingCommand pushingCommand -> buildMessage(pushingCommand);
+                    case SystemCommand systemCommand -> buildMessage(systemCommand);
+                    case XCamControlCommand xCamControl -> buildMessage(xCamControl);
+                    case RawCommand rawCommand -> throw new IllegalStateException("This branch is not possible!");
+                };
+                message = addSequenceId(message, id);
+                topicName = message.topic;
                 try {
-                    mqtt.publish(topic, mqttMessage);
-                } catch (MqttException e) {
-                    throw fromMqttException("Cannot publish command MQTT at %s! %s".formatted(config.uri(), e.getLocalizedMessage()), e);
+                    json = jsonMapper.writeValueAsBytes(message.payload);
+                } catch (JsonProcessingException e) {
+                    log.debug("Cannot convert to JSON: {}", message.payload, e);
+                    throw fromJsonException("Cannot write JSON payload as bytes! " + e.getLocalizedMessage(), e);
                 }
-            } catch (JsonProcessingException e) {
-                if (log.isErrorEnabled()) {
-                    log.error("Cannot convert to JSON: {}", message.payload, e);
-                }
-                throw fromJsonException("Cannot write JSON payload as bytes! " + e.getLocalizedMessage(), e);
+            }
+            var topic = "device/%s/%s".formatted(config.serial(), topicName);
+
+            if (log.isDebugEnabled()) {
+                log.debug("Sending command {} to topic {} with json {}", command, topic, new String(json, UTF_8));
+            }
+            var mqttMessage = new MqttMessage(json);
+            mqttMessage.setId(id);
+            // set QoS to 0 because in LAN mode the publish method was hanging for eternity
+            mqttMessage.setQos(0);
+            try {
+                mqtt.publish(topic, mqttMessage);
+            } catch (MqttException e) {
+                throw fromMqttException("Cannot publish command MQTT at %s! %s".formatted(config.uri(), e.getLocalizedMessage()), e);
             }
         }
 
@@ -723,6 +730,57 @@ public final class PrinterClient implements AutoCloseable {
         public static record XCamControlCommand(Module module, boolean control, boolean printHalt) implements Command {
             public static enum Module {
                 FIRST_LAYER_INSPECTOR, SPAGHETTI_DETECTOR
+            }
+        }
+
+        /**
+         * Represents a raw command that can be sent directly to the printer via MQTT.
+         * This command provides a byte array as its payload.
+         */
+        public static non-sealed interface RawCommand extends Command {
+
+            /**
+             * Returns the MQTT topic to which the command will be published.
+             * The printer's serial number will be appended to this topic automatically.
+             * <p>
+             * Note: The topic must not start with a forward slash (/).
+             *
+             * @return the base topic for the command (without leading slash)
+             */
+            String topic();
+
+            /**
+             * Builds the raw byte payload to be sent with this command.
+             *
+             * @param sequenceId the unique identifier for this message
+             * @return a byte array representing the payload to send to the printer
+             */
+            byte[] buildRawCommand(long sequenceId);
+        }
+
+        /**
+         * Represents a raw string-based command to be sent to the printer via MQTT.
+         * This command generates a string payload, which will be automatically converted to bytes using UTF-8 encoding.
+         */
+        public static interface RawStringCommand extends RawCommand {
+
+            /**
+             * Builds the raw string payload to be sent with this command.
+             *
+             * @param sequenceId the unique identifier for this message (typically used for ordering or tracking)
+             * @return a string representing the payload to send to the printer
+             */
+            String buildRawStringCommand(long sequenceId);
+
+            /**
+             * Converts the string payload returned by {@link #buildRawStringCommand(long)} to a UTF-8 encoded byte array.
+             *
+             * @param sequenceId the unique identifier for this message
+             * @return a UTF-8 encoded byte array representing the string payload
+             */
+            @Override
+            default byte[] buildRawCommand(long sequenceId) {
+                return buildRawStringCommand(sequenceId).getBytes(UTF_8);
             }
         }
     }
