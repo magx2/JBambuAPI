@@ -248,11 +248,11 @@ public final class PrinterClient implements AutoCloseable {
             var command = switch (info) {
                 case GET_VERSION -> "get_version";
             };
-            return Message.report(Message.Payload.info(Map.of("command", command)));
+            return Message.request(Message.Payload.info(Map.of("command", command)));
         }
 
         private Message buildMessage(PushingCommand pushingCommand) {
-            return Message.report(Message.Payload.pushing(Map.of(
+            return Message.request(Message.Payload.pushing(Map.of(
                     "command", "pushall",
                     "version", pushingCommand.version,
                     "push_target", pushingCommand.pushTarget)));
@@ -331,9 +331,9 @@ public final class PrinterClient implements AutoCloseable {
         }
 
         private Message buildMessage(GCodeLineCommand gCodeLine) {
-            var gCode = join("\n", gCodeLine.lines);
+            var gCode = join("\\n", gCodeLine.lines);
             return Message.request(Message.Payload.print(Map.of(
-                    "command", "gcode_file",
+                    "command", "gcode_line",
                     "param", gCode,
                     "user_id", gCodeLine.userId)));
         }
@@ -462,10 +462,6 @@ public final class PrinterClient implements AutoCloseable {
                                 system=%s
                             }""".formatted(info, pushing, print, camera, xcam, system);
                 }
-            }
-
-            public static Message report(Payload payload) {
-                return new Message("report", payload);
             }
 
             public static Message request(Payload payload) {
