@@ -1,0 +1,16 @@
+{
+  "print": {
+    "net": {
+      "conf": 0,
+      "info": [
+        {
+          "ip": 2521540800,
+          "mask": 16777215
+        }
+      ]
+    },
+    "command": "push_status",
+    "msg": 0,
+    "sequence_id": "433"
+  }
+}
