@@ -180,21 +180,13 @@ static JsonClass findJsonClass(def obj) {
         case List: return obj.stream()
                 .map { findJsonClass(it) }
                 .map { new ListClass(it) }
-                .findAny()
+                .reduce { a, b -> join(a, b) }
                 .orElse(new ListClass(new SimpleClass(Object)))
         case Map: return obj.entrySet()
                 .stream()
                 .map { new MapClass(findJsonClass(it.key), findJsonClass(it.value)) }
                 .reduce { a, b ->
-                    def key = a.key
-                    def value = a.value
-                    if (a.key.clazz() != b.key.clazz()) {
-                        key = new SimpleClass(Object)
-                    }
-                    if (a.value.clazz() != b.value.clazz()) {
-                        value = new SimpleClass(Object)
-                    }
-                    return new MapClass(key, value)
+                    return new MapClass(join(a.key, b.key), join(a.value, b.value))
                 }
                 .orElse(new MapClass(new SimpleClass(Object), new SimpleClass(Object)))
         default: {
@@ -205,6 +197,19 @@ static JsonClass findJsonClass(def obj) {
             return new SimpleClass(clazz)
         }
     }
+}
+
+static JsonClass join(JsonClass a, JsonClass b) {
+    if (a.clazz() == Integer && Number.isAssignableFrom(b.clazz())) {
+        return b
+    }
+    if (b.clazz() == Integer && Number.isAssignableFrom(a.clazz())) {
+        return a
+    }
+    if (a == b) {
+        return a
+    }
+    return new SimpleClass(Object)
 }
 
 interface Node extends Comparable<Node> {
@@ -229,6 +234,25 @@ class Branch implements Node {
     String name() {
         return this.name
     }
+
+    boolean equals(o) {
+        if (this.is(o)) return true
+        if (o == null || getClass() != o.class) return false
+
+        Branch branch = (Branch) o
+
+        if (name != branch.name) return false
+        if (nodes != branch.nodes) return false
+
+        return true
+    }
+
+    int hashCode() {
+        int result
+        result = name.hashCode()
+        result = 31 * result + nodes.hashCode()
+        return result
+    }
 }
 
 class Leaf implements Node {
@@ -245,6 +269,22 @@ class Leaf implements Node {
     @Override
     String name() {
         return this.name
+    }
+
+    boolean equals(o) {
+        if (this.is(o)) return true
+        if (o == null || getClass() != o.class) return false
+
+        Leaf leaf = (Leaf) o
+
+        if (name != leaf.name) return false
+        if (type != leaf.type) return false
+
+        return true
+    }
+
+    int hashCode() {
+        return name.hashCode()
     }
 }
 
@@ -263,6 +303,21 @@ class SimpleClass implements JsonClass {
     Class<?> clazz() {
         return this.clazz
     }
+
+    boolean equals(o) {
+        if (this.is(o)) return true
+        if (o == null || getClass() != o.class) return false
+
+        SimpleClass that = (SimpleClass) o
+
+        if (clazz != that.clazz) return false
+
+        return true
+    }
+
+    int hashCode() {
+        return clazz.hashCode()
+    }
 }
 
 class ListClass implements JsonClass {
@@ -274,6 +329,21 @@ class ListClass implements JsonClass {
 
     @Override
     Class<?> clazz() { return List }
+
+    boolean equals(o) {
+        if (this.is(o)) return true
+        if (o == null || getClass() != o.class) return false
+
+        ListClass listClass = (ListClass) o
+
+        if (subClass != listClass.subClass) return false
+
+        return true
+    }
+
+    int hashCode() {
+        return subClass.hashCode()
+    }
 }
 
 class MapClass implements JsonClass {
@@ -287,4 +357,20 @@ class MapClass implements JsonClass {
 
     @Override
     Class<?> clazz() { return Map }
+
+    boolean equals(o) {
+        if (this.is(o)) return true
+        if (o == null || getClass() != o.class) return false
+
+        MapClass mapClass = (MapClass) o
+
+        if (key != mapClass.key) return false
+        if (value != mapClass.value) return false
+
+        return true
+    }
+
+    int hashCode() {
+        return key.hashCode()
+    }
 }
