@@ -42,6 +42,26 @@ class PrinterWatcherTest {
         verify(subscriber, times(files.size())).newState(any(), any());
     }
 
+    @Test
+    @DisplayName("should parse network information containing a MAC address")
+    void parseNetworkInformationContainingMacAddress() throws IOException {
+        // given
+        var watcher = new PrinterWatcher();
+        var subscriber = mock(PrinterWatcher.StateSubscriber.class);
+        var json = Files.readAllBytes(Paths.get(
+                "src/test/resources/example/manual/net-info-with-mac-address.json"));
+
+        // when
+        watcher.subscribe(subscriber);
+        watcher.consume("device/123/report", json);
+
+        // then
+        verify(subscriber).newState(
+                argThat(report -> "90b155ab76d5d5e1".equals(
+                        report.print().net().info().getFirst().get("mac"))),
+                any());
+    }
+
     public static ArrayList<String> readExampleJsonFiles() throws IOException {
         var jsonFiles = Files.walk(Paths.get("src/test/resources/example/A1"))
                 .filter(Files::isRegularFile)

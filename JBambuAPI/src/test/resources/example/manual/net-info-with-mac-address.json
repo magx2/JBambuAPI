@@ -1,0 +1,25 @@
+{
+  "print": {
+    "command": "push_status",
+    "net": {
+      "conf": 16,
+      "info": [
+        {
+          "ip": 2197924032,
+          "mac": "90b155ab76d5d5e1",
+          "mask": 16777215,
+          "retrans": 6,
+          "rtt": "55.89"
+        },
+        {
+          "ip": 0,
+          "mac": "",
+          "mask": 0,
+          "retrans": 0,
+          "rtt": ""
+        }
+      ]
+    },
+    "sequence_id": "2021"
+  }
+}
