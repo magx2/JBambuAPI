@@ -139,20 +139,7 @@ static SortedSet<Node> buildTree(List<Map<String, Object>> maps) {
         def type = values.stream()
                 .filter { it != null }
                 .map { findJsonClass(it) }
-                .min { a, b ->
-                    if (a == b) return 0
-
-                    if (a.clazz() == Double) return -1
-                    if (b.clazz() == Double) return 1
-
-                    if (a.clazz() == List) return -1
-                    if (b.clazz() == List) return 1
-
-                    if (a.clazz() == Map) return -1
-                    if (b.clazz() == Map) return 1
-
-                    return -1
-                }
+                .reduce { a, b -> join(a, b) }
                 .orElseThrow()
         nodes.add(new Leaf(key, type, values))
     }
@@ -200,6 +187,12 @@ static JsonClass findJsonClass(def obj) {
 }
 
 static JsonClass join(JsonClass a, JsonClass b) {
+    if (a instanceof ListClass && b instanceof ListClass) {
+        return new ListClass(join(a.subClass, b.subClass))
+    }
+    if (a instanceof MapClass && b instanceof MapClass) {
+        return new MapClass(join(a.key, b.key), join(a.value, b.value))
+    }
     if (a.clazz() == Integer && Number.isAssignableFrom(b.clazz())) {
         return b
     }
