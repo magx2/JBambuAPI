@@ -24,43 +24,148 @@ jobs:
           PASSWORD: ${{ secrets.PASSWORD }}
           SECRET_KEY_RING_BASE64: ${{ secrets.SECRET_KEY_RING_BASE64 }}
         run: |
+          set -euo pipefail
+
           git config --global user.name 'GitHub Actions'
           git config --global user.email 'actions@github.com'
-          
+
+          log() {
+            echo -e "\033[1;34m[INFO]\033[0m $1"
+          }
+
+          fail() {
+            echo -e "\033[1;31m[ERROR]\033[0m $1" >&2
+            exit 1
+          }
+
+          get_deployment_status() {
+            curl --fail-with-body --silent --show-error \
+              --request POST \
+              --header "Authorization: Bearer $CENTRAL_AUTH_TOKEN" \
+              "https://central.sonatype.com/api/v1/publisher/status?id=$DEPLOYMENT_ID"
+          }
+
+          wait_for_deployment_state() {
+            local expected_state="$1"
+            local attempts=50
+
+            for ((attempt = 1; attempt <= attempts; attempt++)); do
+              local status_response
+              local deployment_state
+              status_response="$(get_deployment_status)"
+              deployment_state="$(sed -n 's/.*"deploymentState"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' <<< "$status_response")"
+              if [[ -z "$deployment_state" ]]; then
+                echo "$status_response" >&2
+                fail "Maven Central returned an invalid deployment status response."
+              fi
+              log "Deployment state: ${deployment_state:-UNKNOWN} (attempt $attempt of $attempts)"
+
+              if [[ "$deployment_state" == "FAILED" ]]; then
+                echo "$status_response" >&2
+                fail "Maven Central deployment failed."
+              fi
+
+              if [[ "$deployment_state" == "$expected_state" ]]; then
+                return 0
+              fi
+
+              if [[ "$deployment_state" == "PUBLISHED" && "$expected_state" == "VALIDATED" ]]; then
+                return 0
+              fi
+
+              if (( attempt < attempts )); then
+                sleep 60
+              fi
+            done
+
+            fail "Maven Central deployment did not reach $expected_state after $attempts attempts."
+          }
+
+          log "Building and preparing the release version"
           ./gradlew clean releaseVersion
           git add JBambuAPI/gradle.properties
           git commit -m "Update JBambuAPI to release version in gradle.properties"
-          
-           echo -n "$SECRET_KEY_RING_BASE64" | base64 --decode > secring.gpg
-          ./gradlew noSnapshots build publishAllPublicationsToSonatypeRepository tag \
-            -PossrhUsername=$OSSRH_USERNAME \
-            -PossrhPassword=$OSSRH_PASSWORD \
+
+          echo -n "$SECRET_KEY_RING_BASE64" | base64 --decode > secring.gpg
+          ./gradlew noSnapshots build publishToMavenLocal \
             -Psigning.keyId=$KEY_ID \
             -Psigning.password=$PASSWORD \
             -Psigning.secretKeyRingFile=$(realpath ./secring.gpg)
-          
-          # Define the file path
-          FILE="JBambuAPI/build/tag.txt"
 
-          # Check if the file exists
+          VERSION="$(sed -n 's/^maven_version=//p' JBambuAPI/gradle.properties)"
+          [[ -n "$VERSION" ]] || fail "Could not read maven_version from JBambuAPI/gradle.properties."
+          [[ "$VERSION" != *-SNAPSHOT ]] || fail "Cannot publish snapshot version $VERSION to Maven Central."
+
+          ARTIFACT_NAME="JBambuAPI-$VERSION"
+          BUNDLE_ROOT="JBambuAPI/build/central-bundle"
+          TARGET_DIR="$BUNDLE_ROOT/pl/grzeslowski/JBambuAPI/$VERSION"
+          BUNDLE_FILE="JBambuAPI/build/$ARTIFACT_NAME.zip"
+
+          log "Assembling Maven Central bundle for pl.grzeslowski:JBambuAPI:$VERSION"
+          mkdir -p "$TARGET_DIR"
+          cp "JBambuAPI/build/libs/$ARTIFACT_NAME.jar" "$TARGET_DIR/"
+          cp "JBambuAPI/build/libs/$ARTIFACT_NAME.jar.asc" "$TARGET_DIR/"
+          cp "JBambuAPI/build/libs/$ARTIFACT_NAME-sources.jar" "$TARGET_DIR/"
+          cp "JBambuAPI/build/libs/$ARTIFACT_NAME-sources.jar.asc" "$TARGET_DIR/"
+          cp "JBambuAPI/build/libs/$ARTIFACT_NAME-javadoc.jar" "$TARGET_DIR/"
+          cp "JBambuAPI/build/libs/$ARTIFACT_NAME-javadoc.jar.asc" "$TARGET_DIR/"
+          cp "JBambuAPI/build/publications/mavenJava/pom-default.xml" "$TARGET_DIR/$ARTIFACT_NAME.pom"
+          cp "JBambuAPI/build/publications/mavenJava/pom-default.xml.asc" "$TARGET_DIR/$ARTIFACT_NAME.pom.asc"
+
+          for artifact in "$TARGET_DIR"/*; do
+            md5sum "$artifact" | cut -d' ' -f1 > "$artifact.md5"
+            sha1sum "$artifact" | cut -d' ' -f1 > "$artifact.sha1"
+          done
+
+          (
+            cd "$BUNDLE_ROOT"
+            zip -r "../$ARTIFACT_NAME.zip" pl
+          )
+
+          CENTRAL_AUTH_TOKEN="$(printf '%s:%s' "$OSSRH_USERNAME" "$OSSRH_PASSWORD" | base64 | tr -d '\r\n')"
+          export CENTRAL_AUTH_TOKEN
+
+          log "Uploading bundle to the Maven Central Publisher Portal"
+          DEPLOYMENT_ID="$(curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $CENTRAL_AUTH_TOKEN" \
+            --form "bundle=@$BUNDLE_FILE;type=application/octet-stream" \
+            "https://central.sonatype.com/api/v1/publisher/upload?name=pl.grzeslowski%3AJBambuAPI%3A$VERSION&publishingType=USER_MANAGED" \
+            | tr -d '\r\n')"
+          export DEPLOYMENT_ID
+          [[ "$DEPLOYMENT_ID" =~ ^[0-9a-fA-F-]{36}$ ]] || fail "Maven Central returned an invalid deployment ID: $DEPLOYMENT_ID"
+          log "Deployment ID: $DEPLOYMENT_ID"
+
+          sleep 10
+          wait_for_deployment_state "VALIDATED"
+
+          log "Publishing the validated Maven Central deployment"
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $CENTRAL_AUTH_TOKEN" \
+            "https://central.sonatype.com/api/v1/publisher/deployment/$DEPLOYMENT_ID"
+
+          wait_for_deployment_state "PUBLISHED"
+
+          log "Maven Central deployment published successfully"
+          ./gradlew tag
+
+          FILE="JBambuAPI/build/tag.txt"
           if [ -f "$FILE" ]; then
-              # Read the content of the file into the TAG variable
-              TAG=$(cat "$FILE")
-              echo "tag value: $TAG"
-              echo "tag=$TAG" >> $GITHUB_OUTPUT
-          
-              echo "New tag $tag"
-              git tag $TAG
-              echo "Pushing tag..."
-              git push origin $TAG
+              TAG="$(cat "$FILE")"
+              log "Tag value: $TAG"
+              echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+              git tag "$TAG"
+              log "Pushing tag $TAG"
+              git push origin "$TAG"
           else
-              echo "File $FILE does not exist."
-              exit 33
+              fail "File $FILE does not exist."
           fi
-          
+
           ./gradlew nextSnapshot
           git add JBambuAPI/gradle.properties
           git commit -m "Update JBambuAPI to SNAPSHOT version in gradle.properties"
-          
-          echo "Pushing master to origin..."
+
+          log "Pushing master to origin"
           git push origin master
